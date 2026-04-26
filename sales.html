@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История продаж - MotoAuction</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-theme">
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-motorcycle"></i>
+                    <span>Moto</span>Auction
+                </a>
+                
+                <div class="nav-links">
+                    <a href="index.html"><i class="fas fa-home"></i> Главная</a>
+                    <a href="sales.html" class="active"><i class="fas fa-history"></i> История продаж</a>
+                    <a href="dashboard.html"><i class="fas fa-user"></i> Личный кабинет</a>
+                    <a href="#stats"><i class="fas fa-chart-bar"></i> Статистика</a>
+                </div>
+                
+                <div class="nav-auth" id="auth-buttons">
+                </div>
+                
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <section class="sales-history">
+        <div class="container">
+            <div class="sales-header">
+                <h1>История продаж</h1>
+                <p>Архив завершенных аукционов и статистика продаж</p>
+                
+                <div class="sales-filters">
+                    <div class="filter-group">
+                        <label for="year-filter">Год:</label>
+                        <select id="year-filter" class="form-input" onchange="filterSales()">
+                            <option value="all">Все годы</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="brand-filter">Марка:</label>
+                        <select id="brand-filter" class="form-input" onchange="filterSales()">
+                            <option value="all">Все марки</option>
+                            <option value="Harley-Davidson">Harley-Davidson</option>
+                            <option value="Yamaha">Yamaha</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="price-filter">Цена:</label>
+                        <select id="price-filter" class="form-input" onchange="filterSales()">
+                            <option value="all">Любая цена</option>
+                            <option value="0-50000">До 50,000 ₽</option>
+                            <option value="50000-200000">50,000 - 200,000 ₽</option>
+                            <option value="200000+">От 200,000 ₽</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sales-stats" id="stats">
+                <div class="stat-card">
+                    <div class="stat-icon gold">
+                        <i class="fas fa-motorcycle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-sold">0</h3>
+                        <p>Всего продано</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon gold">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-volume">0 ₽</h3>
+                        <p>Общий объем продаж</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon gold">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="avg-price">0 ₽</h3>
+                        <p>Средняя цена</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon gold">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="this-month">0</h3>
+                        <p>Продано в этом месяце</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sales-list">
+                <h2>Завершенные аукционы</h2>
+                
+                <div class="sales-table-container">
+                    <table class="admin-table" id="sales-table">
+                        <thead>
+                            <tr>
+                                <th>Мотоцикл</th>
+                                <th>Продавец</th>
+                                <th>Покупатель</th>
+                                <th>Цена продажи</th>
+                                <th>Дата продажи</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="no-sales" id="no-sales-message" style="display: none;">
+                    <i class="fas fa-history fa-3x gold"></i>
+                    <h3>История продаж пуста</h3>
+                    <p>Здесь появятся завершенные аукционы после их проведения</p>
+                </div>
+            </div>
+            
+            <div class="top-sales">
+                <h2>Топ продаж этого месяца</h2>
+                
+                <div class="top-sales-grid" id="top-sales-grid">
+                </div>
+            </div>
+            
+            <div class="sales-chart">
+                <h2>Статистика продаж по месяцам</h2>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo">
+                        <i class="fas fa-motorcycle"></i>
+                        <span>Moto</span>Auction
+                    </a>
+                    <p>История и статистика продаж</p>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html">На главную</a>
+                    <a href="dashboard.html">Личный кабинет</a>
+                    <a href="admin.html">Администраторам</a>
+                    <a href="#">Экспорт данных</a>
+                </div>
+            </div>
+            <p class="footer-copyright">© 2024 MotoAuction. История продаж</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let salesChart = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            ui.initTheme();
+            ui.updateAuthButtons();
+            
+            loadSalesHistory();
+            
+            loadTopSales();
+            
+            initSalesChart();
+        });
+        
+        function loadSalesHistory() {
+            const motorcycles = ui.dataStore.getMotorcycles();
+            const soldMotorcycles = motorcycles.filter(m => m.status === 'sold');
+            
+            updateStats(soldMotorcycles);
+            
+            displaySalesTable(soldMotorcycles);
+        }
+        
+        function updateStats(soldMotorcycles) {
+            const totalSold = soldMotorcycles.length;
+            const totalVolume = soldMotorcycles.reduce((sum, m) => sum + m.currentPrice, 0);
+            const avgPrice = totalSold > 0 ? Math.round(totalVolume / totalSold) : 0;
+            
+            const currentMonth = new Date().getMonth();
+            const thisMonthSales = soldMotorcycles.filter(m => {
+                const saleDate = new Date(m.updatedAt || m.createdAt);
+                return saleDate.getMonth() === currentMonth;
+            }).length;
+            
+            document.getElementById('total-sold').textContent = totalSold;
+            document.getElementById('total-volume').textContent = totalVolume.toLocaleString() + ' ₽';
+            document.getElementById('avg-price').textContent = avgPrice.toLocaleString() + ' ₽';
+            document.getElementById('this-month').textContent = thisMonthSales;
+        }
+        
+        function displaySalesTable(soldMotorcycles) {
+            const tbody = document.getElementById('sales-table-body');
+            const noSalesMessage = document.getElementById('no-sales-message');
+            
+            if (soldMotorcycles.length === 0) {
+                document.getElementById('sales-table').style.display = 'none';
+                noSalesMessage.style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('sales-table').style.display = 'table';
+            noSalesMessage.style.display = 'none';
+            
+            const sortedSales = [...soldMotorcycles].sort((a, b) => {
+                const dateA = new Date(a.updatedAt || a.createdAt);
+                const dateB = new Date(b.updatedAt || b.createdAt);
+                return dateB - dateA;
+            });
+            
+            tbody.innerHTML = sortedSales.map(motorcycle => {
+                const saleDate = new Date(motorcycle.updatedAt || motorcycle.createdAt);
+                const formattedDate = saleDate.toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="sale-item">
+                                <img src="${motorcycle.image}" alt="${motorcycle.title}" class="sale-thumbnail">
+                                <div class="sale-info">
+                                    <strong>${motorcycle.title}</strong>
+                                    <div class="sale-details">
+                                        ${motorcycle.brand} ${motorcycle.model}, ${motorcycle.year} г.
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Продавец #${motorcycle.sellerId}</td>
+                        <td>${motorcycle.buyerId ? 'Покупатель #' + motorcycle.buyerId : 'Не указан'}</td>
+                        <td class="gold" style="font-weight: 700;">${motorcycle.currentPrice.toLocaleString()} ₽</td>
+                        <td>${formattedDate}</td>
+                        <td>
+                            <span class="status-badge status-sold">Продано</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function loadTopSales() {
+            const motorcycles = ui.dataStore.getMotorcycles();
+            const soldMotorcycles = motorcycles.filter(m => m.status === 'sold');
+            
+            const topSales = [...soldMotorcycles]
+                .sort((a, b) => b.currentPrice - a.currentPrice)
+                .slice(0, 3);
+            
+            const container = document.getElementById('top-sales-grid');
+            if (!container) return;
+            
+            if (topSales.length === 0) {
+                container.innerHTML = `
+                    <div class="no-top-sales">
+                        <p>Нет данных о топ продажах</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = topSales.map((sale, index) => `
+                <div class="top-sale-card">
+                    <div class="top-sale-badge">
+                        <i class="fas fa-trophy"></i> #${index + 1}
+                    </div>
+                    <img src="${sale.image}" alt="${sale.title}" class="top-sale-image">
+                    <div class="top-sale-content">
+                        <h3>${sale.title}</h3>
+                        <div class="top-sale-info">
+                            <span>${sale.brand} ${sale.model}</span>
+                            <span>${sale.year} г.</span>
+                        </div>
+                        <div class="top-sale-price gold">${sale.currentPrice.toLocaleString()} ₽</div>
+                        <div class="top-sale-date">
+                            <i class="fas fa-calendar"></i> 
+                            ${new Date(sale.updatedAt || sale.createdAt).toLocaleDateString()}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function initSalesChart() {
+            const ctx = document.getElementById('salesChart');
+            if (!ctx) return;
+            
+            const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+            const currentMonth = new Date().getMonth();
+            
+            const salesData = months.map((_, index) => {
+                if (index > currentMonth) return 0;
+                return Math.floor(Math.random() * 10) + 1;
+            });
+            
+            const revenueData = months.map((_, index) => {
+                if (index > currentMonth) return 0;
+                return Math.floor(Math.random() * 1000000) + 100000;
+            });
+            
+            salesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Количество продаж',
+                            data: salesData,
+                            backgroundColor: 'rgba(212, 175, 55, 0.5)',
+                            borderColor: 'rgba(212, 175, 55, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Объем продаж (тыс. ₽)',
+                            data: revenueData.map(v => Math.round(v / 1000)),
+                            backgroundColor: 'rgba(26, 26, 26, 0.5)',
+                            borderColor: 'rgba(26, 26, 26, 1)',
+                            borderWidth: 1,
+                            type: 'line',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: 'var(--text-primary)'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'var(--border)'
+                            },
+                            ticks: {
+                                color: 'var(--text-primary)'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: {
+                                color: 'var(--border)'
+                            },
+                            ticks: {
+                                color: 'var(--text-primary)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Количество',
+                                color: 'var(--text-primary)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                color: 'var(--text-primary)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Объем (тыс. ₽)',
+                                color: 'var(--text-primary)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function filterSales() {
+            const yearFilter = document.getElementById('year-filter').value;
+            const brandFilter = document.getElementById('brand-filter').value;
+            const priceFilter = document.getElementById('price-filter').value;
+            
+            const motorcycles = ui.dataStore.getMotorcycles();
+            let filtered = motorcycles.filter(m => m.status === 'sold');
+            
+            if (yearFilter !== 'all') {
+                filtered = filtered.filter(m => m.year == yearFilter);
+            }
+            
+            if (brandFilter !== 'all') {
+                filtered = filtered.filter(m => m.brand === brandFilter);
+            }
+            
+            if (priceFilter !== 'all') {
+                const [min, max] = priceFilter.split('-').map(v => v.replace('+', ''));
+                if (max === '+') {
+                    filtered = filtered.filter(m => m.currentPrice >= parseInt(min));
+                } else {
+                    filtered = filtered.filter(m => 
+                        m.currentPrice >= parseInt(min) && 
+                        m.currentPrice <= parseInt(max)
+                    );
+                }
+            }
+            
+            updateStats(filtered);
+            displaySalesTable(filtered);
+        }
+    </script>
+    
+    <style>
+        .sales-history {
+            padding: 40px 0;
+        }
+        
+        .sales-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .sales-header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .sales-header p {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .sales-filters {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .sales-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .sales-stats .stat-card {
+            background-color: var(--bg-card);
+            padding: 25px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .sales-stats .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .sales-stats .stat-icon {
+            font-size: 40px;
+        }
+        
+        .sales-stats .stat-info h3 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .sales-stats .stat-info p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .sales-list {
+            margin-bottom: 60px;
+        }
+        
+        .sales-list h2 {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--gold);
+        }
+        
+        .sales-table-container {
+            overflow-x: auto;
+            background-color: var(--bg-card);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .sale-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .sale-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .sale-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sale-details {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        
+        .no-sales {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: var(--bg-card);
+            border-radius: 10px;
+        }
+        
+        .no-sales i {
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+        
+        .no-sales h3 {
+            margin-bottom: 15px;
+        }
+        
+        .no-sales p {
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto 25px;
+        }
+        
+        .top-sales {
+            margin-bottom: 60px;
+        }
+        
+        .top-sales h2 {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--gold);
+        }
+        
+        .top-sales-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .top-sale-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s;
+        }
+        
+        .top-sale-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .top-sale-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: var(--gold);
+            color: black;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .top-sale-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .top-sale-content {
+            padding: 20px;
+        }
+        
+        .top-sale-content h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .top-sale-info {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .top-sale-price {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .top-sale-date {
+            color: var(--text-secondary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sales-chart {
+            background-color: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+        }
+        
+        .sales-chart h2 {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--gold);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+        
+        .no-top-sales {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            background-color: var(--bg-card);
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .sales-filters {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .filter-group {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</body>
+</html>
