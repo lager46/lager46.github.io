@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Вход - MotoAuction</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-theme">
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-motorcycle"></i>
+                    <span>Moto</span>Auction
+                </a>
+                
+                <div class="nav-links">
+                    <a href="index.html"><i class="fas fa-home"></i> На главную</a>
+                </div>
+                
+                <div class="nav-auth">
+                    <a href="register.html" class="btn btn-outline btn-small">Регистрация</a>
+                </div>
+                
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <section class="auth-section">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-left">
+                    <div class="auth-welcome">
+                        <h1>С возвращением!</h1>
+                        <p>Войдите в свой аккаунт, чтобы продолжить участие в аукционах</p>
+                        
+                        <div class="auth-features">
+                            <div class="feature">
+                                <i class="fas fa-gavel gold"></i>
+                                <div>
+                                    <h4>Делайте ставки</h4>
+                                    <p>Участвуйте в аукционах на понравившиеся мотоциклы</p>
+                                </div>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-motorcycle gold"></i>
+                                <div>
+                                    <h4>Продавайте</h4>
+                                    <p>Выставляйте свои мотоциклы на аукцион</p>
+                                </div>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-shield-alt gold"></i>
+                                <div>
+                                    <h4>Безопасно</h4>
+                                    <p>Все сделки защищены и безопасны</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="auth-right">
+                    <div class="auth-form-container">
+                        <h2 class="auth-title">Вход в аккаунт</h2>
+                        
+                        <form onsubmit="loginUser(event)" id="login-form">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="password" class="form-label">Пароль</label>
+                                <div class="password-input">
+                                    <input type="password" id="password" class="form-input" placeholder="Введите пароль" required>
+                                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="password-links">
+                                    <a href="#" onclick="showForgotPassword()" style="font-size: 14px;">Забыли пароль?</a>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="remember">
+                                    <span>Запомнить меня</span>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-gold auth-submit">
+                                <i class="fas fa-sign-in-alt"></i> Войти
+                            </button>
+                            
+                            <div class="auth-divider">
+                                <span>Или войдите через</span>
+                            </div>
+                            
+                            <div class="social-login">
+                                <button type="button" class="btn social-btn google-btn" disabled>
+                                    <i class="fab fa-google"></i> Google
+                                </button>
+                                <button type="button" class="btn social-btn vk-btn" disabled>
+                                    <i class="fab fa-vk"></i> ВКонтакте
+                                </button>
+                            </div>
+                            
+                            <p class="auth-switch">
+                                Нет аккаунта? <a href="register.html" class="gold">Зарегистрироваться</a>
+                            </p>
+                        </form>
+                        
+                        <div class="test-credentials">
+                            <h4><i class="fas fa-vial"></i> Тестовые доступы:</h4>
+                            <div class="credentials">
+                                <div>
+                                    <strong>Администратор:</strong><br>
+                                    Email: <code>admin@test.ru</code><br>
+                                    Пароль: <code>admin123</code>
+                                </div>
+                                <div>
+                                    <strong>Пользователь:</strong><br>
+                                    Email: <code>user@test.ru</code><br>
+                                    Пароль: <code>user123</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo">
+                        <i class="fas fa-motorcycle"></i>
+                        <span>Moto</span>Auction
+                    </a>
+                    <p>Войдите в систему для доступа к аукционам</p>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html">Главная</a>
+                    <a href="register.html">Регистрация</a>
+                    <a href="#">Помощь</a>
+                    <a href="#">Контакты</a>
+                </div>
+            </div>
+            <p class="footer-copyright">© 2024 MotoAuction. Страница входа</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            ui.initTheme();
+            
+            if (ui.auth.isLoggedIn()) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+        
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.querySelector('.password-toggle i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.classList.remove('fa-eye');
+                toggleButton.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.classList.remove('fa-eye-slash');
+                toggleButton.classList.add('fa-eye');
+            }
+        }
+        
+        function showForgotPassword() {
+            const email = prompt('Введите ваш email для восстановления пароля:');
+            if (email) {
+                alert(`Инструкция по восстановлению пароля будет отправлена на ${email}\n(функция в разработке)`);
+            }
+        }
+        
+        window.loginUser = function(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            if (remember) {
+                localStorage.setItem('rememberedEmail', email);
+            }
+            
+            const result = ui.auth.login(email, password);
+            
+            if (result.success) {
+                alert('Вход выполнен успешно!');
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 500);
+            } else {
+                showLoginError(result.message);
+            }
+        };
+        
+        function showLoginError(message) {
+            let errorElement = document.querySelector('.login-error');
+            
+            if (!errorElement) {
+                errorElement = document.createElement('div');
+                errorElement.className = 'login-error';
+                document.querySelector('#login-form').prepend(errorElement);
+            }
+            
+            errorElement.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                errorElement.remove();
+            }, 5000);
+        }
+        
+        window.onload = function() {
+            const rememberedEmail = localStorage.getItem('rememberedEmail');
+            if (rememberedEmail) {
+                document.getElementById('email').value = rememberedEmail;
+                document.getElementById('remember').checked = true;
+            }
+        };
+    </script>
+    
+    <style>
+        .auth-section {
+            padding: 60px 0;
+            min-height: calc(100vh - 200px);
+            display: flex;
+            align-items: center;
+        }
+        
+        .auth-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            background-color: var(--bg-card);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .auth-left {
+            padding: 50px;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1a1a 100%);
+            display: flex;
+            align-items: center;
+        }
+        
+        .auth-right {
+            padding: 50px;
+        }
+        
+        .auth-welcome h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .auth-welcome p {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        
+        .auth-features {
+            margin-top: 40px;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .feature i {
+            font-size: 24px;
+            margin-top: 5px;
+        }
+        
+        .feature h4 {
+            margin-bottom: 5px;
+        }
+        
+        .feature p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .auth-title {
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .auth-form-container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .password-input {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .password-links {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .checkbox-label input {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .auth-submit {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        
+        .auth-divider {
+            text-align: center;
+            margin: 25px 0;
+            position: relative;
+        }
+        
+        .auth-divider span {
+            background-color: var(--bg-card);
+            padding: 0 15px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .auth-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: var(--border);
+            z-index: -1;
+        }
+        
+        .social-login {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        
+        .google-btn {
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .vk-btn {
+            background-color: #4C75A3;
+            color: white;
+            border: none;
+        }
+        
+        .social-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .auth-switch {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 25px;
+        }
+        
+        .test-credentials {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: rgba(212, 175, 55, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid var(--gold);
+        }
+        
+        .test-credentials h4 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .credentials {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            font-size: 14px;
+        }
+        
+        .credentials code {
+            background-color: var(--bg-primary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .login-error {
+            margin-bottom: 20px;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .error-message {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--danger);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .auth-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .auth-left {
+                display: none;
+            }
+        }
+    </style>
+</body>
+</html>

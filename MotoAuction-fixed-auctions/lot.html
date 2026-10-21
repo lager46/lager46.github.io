@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Лот аукциона - MotoAuction</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chatbot.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-theme">
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-motorcycle"></i>
+                    <span>Moto</span>Auction
+                </a>
+                
+                <div class="nav-links">
+                    <a href="index.html"><i class="fas fa-home"></i> Главная</a>
+                    <a href="#similar-lots"><i class="fas fa-bars"></i> Похожие лоты</a>
+                    <a href="#how-to-bid"><i class="fas fa-question-circle"></i> Как участвовать</a>
+                </div>
+                
+                <div class="nav-auth" id="auth-buttons">
+                </div>
+                
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="breadcrumbs">
+        <div class="container">
+            <a href="index.html">Главная</a> / 
+            <a href="index.html#auctions">Аукционы</a> / 
+            <span id="lot-breadcrumb">Загрузка...</span>
+        </div>
+    </div>
+
+    <section class="lot-details-section">
+        <div class="container">
+            <div class="lot-details-container" id="lot-details">
+                <div class="loading-lot">
+                    <i class="fas fa-spinner fa-spin fa-3x gold"></i>
+                    <p>Загрузка информации о лоте...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="similar-lots" id="similar-lots">
+        <div class="container">
+            <h2 class="section-title">Похожие лоты</h2>
+            <div class="auctions-grid" id="similar-lots-grid">
+            </div>
+        </div>
+    </section>
+
+    <section class="how-to-bid-section" id="how-to-bid">
+        <div class="container">
+            <h2 class="section-title">Как участвовать в аукционе</h2>
+            <div class="instructions">
+                <div class="instruction-card">
+                    <div class="instruction-number gold">1</div>
+                    <h3>Регистрация</h3>
+                    <p>Зарегистрируйтесь на сайте, чтобы получить возможность делать ставки</p>
+                </div>
+                <div class="instruction-card">
+                    <div class="instruction-number gold">2</div>
+                    <h3>Изучите лот</h3>
+                    <p>Внимательно ознакомьтесь с описанием и фотографиями мотоцикла</p>
+                </div>
+                <div class="instruction-card">
+                    <div class="instruction-number gold">3</div>
+                    <h3>Сделайте ставку</h3>
+                    <p>Введите сумму выше текущей цены и нажмите "Сделать ставку"</p>
+                </div>
+                <div class="instruction-card">
+                    <div class="instruction-number gold">4</div>
+                    <h3>Следите за аукционом</h3>
+                    <p>Отслеживайте ситуацию и повышайте ставку при необходимости</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="auction-rules">
+        <div class="container">
+            <div class="rules-card">
+                <h3><i class="fas fa-exclamation-circle gold"></i> Важная информация</h3>
+                <ul class="rules-list">
+                    <li>Все ставки являются окончательными и не могут быть отменены</li>
+                    <li>Победитель аукциона обязан выкупить лот в течение 3 дней</li>
+                    <li>Продавец обязан предоставить мотоцикл в состоянии, соответствующем описанию</li>
+                    <li>Комиссия аукциона составляет 5% от стоимости лота</li>
+                    <li>В случае споров решение администрации является окончательным</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo">
+                        <i class="fas fa-motorcycle"></i>
+                        <span>Moto</span>Auction
+                    </a>
+                    <p>Детальная страница лота аукциона</p>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html">На главную</a>
+                    <a href="create-lot.html">Продать мотоцикл</a>
+                    <a href="dashboard.html">Личный кабинет</a>
+                    <a href="admin.html">Администраторам</a>
+                </div>
+            </div>
+            <p class="footer-copyright">© 2024 MotoAuction. Страница лота</p>
+        </div>
+    </footer>
+
+    <div class="modal" id="complaint-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Пожаловаться на лот</h3>
+                <button class="modal-close" onclick="closeModal('complaint-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="complaint-form">
+                    <div class="form-group">
+                        <label class="form-label">Причина жалобы</label>
+                        <select id="complaint-reason" class="form-input" required>
+                            <option value="">Выберите причину</option>
+                            <option value="fake">Лот не соответствует описанию</option>
+                            <option value="fraud">Мошенничество</option>
+                            <option value="prohibited">Запрещенный товар</option>
+                            <option value="other">Другое</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Подробности</label>
+                        <textarea id="complaint-details" class="form-input form-textarea" 
+                                  placeholder="Опишите проблему подробнее..." rows="4" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" onclick="closeModal('complaint-modal')">Отмена</button>
+                        <button type="submit" class="btn btn-gold">Отправить жалобу</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let currentLotImages = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            ui.initTheme();
+            ui.updateAuthButtons();
+            
+            loadLotDetails();
+            loadSimilarLots();
+            setupComplaintModal();
+        });
+        
+        function loadLotDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const lotId = parseInt(urlParams.get('id'));
+            
+            if (!lotId) {
+                document.getElementById('lot-details').innerHTML = `
+                    <div class="error-message">
+                        <h2>Лот не найден</h2>
+                        <p>Запрошенный лот не существует или был удален</p>
+                        <a href="index.html" class="btn btn-gold">Вернуться на главную</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            const motorcycles = ui.dataStore.getMotorcycles();
+            const lot = motorcycles.find(m => m.id === lotId);
+            
+            if (!lot) {
+                document.getElementById('lot-details').innerHTML = `
+                    <div class="error-message">
+                        <h2>Лот не найден</h2>
+                        <p>Запрошенный лот не существует или был удален</p>
+                        <a href="index.html" class="btn btn-gold">Вернуться на главную</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            document.getElementById('lot-breadcrumb').textContent = lot.title;
+            
+            const endDate = new Date(lot.endDate);
+            const now = new Date();
+            const timeLeft = endDate - now;
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            
+            const images = lot.images && lot.images.length > 0 ? lot.images : [lot.image];
+            currentLotImages = images;
+            
+            let thumbnailsHtml = '';
+            if (images.length === 1) {
+                thumbnailsHtml = `
+                    <div class="image-thumbnails">
+                        <div class="thumbnail active">
+                            <img src="${images[0]}" alt="Основное фото">
+                        </div>
+                    </div>
+                `;
+            } else {
+                thumbnailsHtml = `
+                    <div class="image-thumbnails">
+                        ${images.map((img, idx) => `
+                            <div class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="changeMainImage(${idx})">
+                                <img src="${img}" alt="Фото ${idx + 1}">
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            document.getElementById('lot-details').innerHTML = `
+                <div class="lot-main-content">
+                    <!-- Левая колонка - изображения -->
+                    <div class="lot-images-column">
+                        <div class="main-image-container" onclick="openLightbox(0)">
+                            <img src="${images[0]}" alt="${lot.title}" class="lot-main-image" id="main-lot-image">
+                            ${lot.status === 'sold' ? `
+                                <div class="sold-overlay">
+                                    <span class="sold-badge">ПРОДАН</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${thumbnailsHtml}
+                    </div>
+                    
+                    <!-- Правая колонка - информация -->
+                    <div class="lot-info-column">
+                        <div class="lot-header">
+                            <h1>${lot.title}</h1>
+                            <div class="lot-status-badge status-badge ${
+                                lot.status === 'active' ? 'status-active' : 
+                                lot.status === 'pending' ? 'status-pending' : 
+                                'status-sold'
+                            }">
+                                ${lot.status === 'active' ? 'АКТИВНЫЙ АУКЦИОН' : 
+                                  lot.status === 'pending' ? 'НА МОДЕРАЦИИ' : 
+                                  'ПРОДАН'}
+                            </div>
+                        </div>
+                        
+                        <div class="lot-meta-info">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar gold"></i>
+                                <div>
+                                    <span class="meta-label">Год выпуска</span>
+                                    <span class="meta-value">${lot.year}</span>
+                                </div>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-tag gold"></i>
+                                <div>
+                                    <span class="meta-label">Марка</span>
+                                    <span class="meta-value">${lot.brand}</span>
+                                </div>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-cog gold"></i>
+                                <div>
+                                    <span class="meta-label">Модель</span>
+                                    <span class="meta-value">${lot.model}</span>
+                                </div>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user gold"></i>
+                                <div>
+                                    <span class="meta-label">Продавец</span>
+                                    <span class="meta-value">Пользователь #${lot.sellerId}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="lot-price-section">
+                            <div class="current-price-box">
+                                <span class="price-label">Текущая цена</span>
+                                <div class="price-amount gold">${lot.currentPrice.toLocaleString()} ₽</div>
+                                <span class="starting-price">
+                                    Начальная цена: ${lot.startingPrice.toLocaleString()} ₽
+                                </span>
+                            </div>
+                            
+                            ${lot.status === 'active' ? `
+                                <div class="lot-timer-box">
+                                    <div class="timer-label">
+                                        <i class="fas fa-clock gold"></i> До конца аукциона:
+                                    </div>
+                                    <div class="timer-display" id="lot-timer">
+                                        ${days}д ${hours}ч
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${lot.status === 'active' ? `
+                            <div class="bid-action-section">
+                                <h3>Сделать ставку</h3>
+                                ${ui.auth.isLoggedIn() ? `
+                                    <div class="bid-form-large">
+                                        <div class="bid-input-group">
+                                            <input type="number" 
+                                                   id="lot-bid-input" 
+                                                   class="form-input bid-input-large" 
+                                                   min="${lot.currentPrice + 100}"
+                                                   value="${lot.currentPrice + 100}"
+                                                   placeholder="Введите сумму ставки">
+                                            <span class="currency">₽</span>
+                                        </div>
+                                        <button class="btn btn-gold btn-large" onclick="placeBidOnLot(${lot.id})">
+                                            <i class="fas fa-gavel"></i> Сделать ставку
+                                        </button>
+                                    </div>
+                                    <p class="bid-hint">
+                                        Минимальная ставка: ${(lot.currentPrice + 100).toLocaleString()} ₽
+                                    </p>
+                                ` : `
+                                    <div class="login-prompt">
+                                        <p>Для участия в аукционе необходимо войти в систему</p>
+                                        <div class="auth-buttons">
+                                            <a href="login.html" class="btn btn-gold">Войти</a>
+                                            <a href="register.html" class="btn btn-outline">Регистрация</a>
+                                        </div>
+                                    </div>
+                                `}
+                            </div>
+                        ` : ''}
+                        
+                        <div class="lot-actions">
+                            ${ui.auth.isLoggedIn() ? `
+                                <button class="btn btn-outline" onclick="addToWatchlist(${lot.id})">
+                                    <i class="far fa-heart"></i> В избранное
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-outline" onclick="showComplaintModal(${lot.id})">
+                                <i class="fas fa-flag"></i> Пожаловаться
+                            </button>
+                            <button class="btn btn-outline" onclick="shareLot()">
+                                <i class="fas fa-share-alt"></i> Поделиться
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Нижняя часть - описание и история ставок -->
+                <div class="lot-bottom-section">
+                    <!-- Описание -->
+                    <div class="lot-description-card">
+                        <h3><i class="fas fa-align-left gold"></i> Описание</h3>
+                        <div class="description-content">
+                            ${lot.description}
+                        </div>
+                    </div>
+                    
+                    <!-- История ставок -->
+                    <div class="bids-history-card">
+                        <div class="bids-header">
+                            <h3><i class="fas fa-history gold"></i> История ставок</h3>
+                            <span class="bids-count">${lot.bids.length} ставок</span>
+                        </div>
+                        
+                        ${lot.bids.length > 0 ? `
+                            <div class="bids-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Пользователь</th>
+                                            <th>Ставка</th>
+                                            <th>Время</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${lot.bids.slice().reverse().map(bid => `
+                                            <tr class="${bid.amount === lot.currentPrice ? 'winning-bid' : ''}">
+                                                <td>
+                                                    <div class="bid-user">
+                                                        <i class="fas fa-user-circle"></i>
+                                                        <span>${bid.username || 'Аноним'}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="bid-amount gold">${bid.amount.toLocaleString()} ₽</td>
+                                                <td class="bid-time">
+                                                    ${new Date(bid.timestamp).toLocaleString()}
+                                                    ${bid.amount === lot.currentPrice ? 
+                                                        '<span class="current-bid-badge">Текущая</span>' : ''}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : `
+                            <div class="no-bids">
+                                <i class="fas fa-gavel fa-2x"></i>
+                                <p>Пока нет ставок. Будьте первым!</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+            
+            if (lot.status === 'active') {
+                startLotTimer(lot.endDate);
+            }
+        }
+        
+        function changeMainImage(index) {
+            if (currentLotImages[index]) {
+                const mainImage = document.getElementById('main-lot-image');
+                if (mainImage) {
+                    mainImage.src = currentLotImages[index];
+                }
+                
+                document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
+                    if (i === index) {
+                        thumb.classList.add('active');
+                    } else {
+                        thumb.classList.remove('active');
+                    }
+                });
+            }
+        }
+        
+        function openLightbox(startIndex) {
+            if (currentLotImages.length === 0) return;
+            
+            let currentIndex = startIndex;
+            
+            const lightbox = document.createElement('div');
+            lightbox.className = 'lightbox';
+            lightbox.innerHTML = `
+                <button class="lightbox-close">&times;</button>
+                <button class="lightbox-prev"><i class="fas fa-chevron-left"></i></button>
+                <img src="${currentLotImages[currentIndex]}" alt="Фото ${currentIndex + 1}" class="lightbox-img">
+                <button class="lightbox-next"><i class="fas fa-chevron-right"></i></button>
+                <div class="lightbox-counter">${currentIndex + 1} / ${currentLotImages.length}</div>
+            `;
+            
+            document.body.appendChild(lightbox);
+            
+            const imgElement = lightbox.querySelector('.lightbox-img');
+            
+            const updateImage = () => {
+                imgElement.src = currentLotImages[currentIndex];
+                lightbox.querySelector('.lightbox-counter').textContent = `${currentIndex + 1} / ${currentLotImages.length}`;
+            };
+            
+            lightbox.querySelector('.lightbox-close').onclick = () => lightbox.remove();
+            lightbox.querySelector('.lightbox-prev').onclick = (e) => {
+                e.stopPropagation();
+                currentIndex = (currentIndex - 1 + currentLotImages.length) % currentLotImages.length;
+                updateImage();
+            };
+            lightbox.querySelector('.lightbox-next').onclick = (e) => {
+                e.stopPropagation();
+                currentIndex = (currentIndex + 1) % currentLotImages.length;
+                updateImage();
+            };
+            
+            lightbox.onclick = (e) => {
+                if (e.target === lightbox) lightbox.remove();
+            };
+            
+            document.addEventListener('keydown', (e) => {
+                if (!document.body.contains(lightbox)) return;
+                if (e.key === 'Escape') lightbox.remove();
+                if (e.key === 'ArrowLeft') {
+                    currentIndex = (currentIndex - 1 + currentLotImages.length) % currentLotImages.length;
+                    updateImage();
+                }
+                if (e.key === 'ArrowRight') {
+                    currentIndex = (currentIndex + 1) % currentLotImages.length;
+                    updateImage();
+                }
+            });
+        }
+        
+        function loadSimilarLots() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentLotId = parseInt(urlParams.get('id'));
+            
+            const motorcycles = ui.dataStore.getMotorcycles();
+            const currentLot = motorcycles.find(m => m.id === currentLotId);
+            
+            if (!currentLot) return;
+            
+            const similarLots = motorcycles.filter(m => 
+                m.id !== currentLotId && 
+                m.status === 'active' &&
+                (m.brand === currentLot.brand || m.model === currentLot.model)
+            ).slice(0, 4);
+            
+            const container = document.getElementById('similar-lots-grid');
+            if (!container) return;
+            
+            if (similarLots.length === 0) {
+                container.innerHTML = `
+                    <p class="no-similar-lots">Нет похожих лотов. <a href="index.html">Посмотрите все аукционы</a></p>
+                `;
+                return;
+            }
+            
+            container.innerHTML = similarLots.map(lot => `
+                <div class="auction-card">
+                    <img src="${lot.image}" alt="${lot.title}" class="auction-image">
+                    <div class="auction-content">
+                        <h3 class="auction-title">${lot.title}</h3>
+                        <div class="auction-info">
+                            <span>${lot.brand} ${lot.model}</span>
+                            <span>${lot.year} г.</span>
+                        </div>
+                        <div class="auction-price">${lot.currentPrice.toLocaleString()} ₽</div>
+                        <div class="auction-actions">
+                            <a href="lot.html?id=${lot.id}" class="btn btn-outline" style="flex: 1;">Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function startLotTimer(endDateString) {
+            const endDate = new Date(endDateString);
+            
+            function updateTimer() {
+                const now = new Date();
+                const timeLeft = endDate - now;
+                
+                const timerElement = document.getElementById('lot-timer');
+                if (!timerElement) return;
+                
+                if (timeLeft <= 0) {
+                    timerElement.innerHTML = 'Аукцион завершен';
+                    return;
+                }
+                
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                timerElement.innerHTML = `
+                    ${days}д ${hours}ч ${minutes}м ${seconds}с
+                `;
+            }
+            
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+        
+        function placeBidOnLot(motorcycleId) {
+            const bidInput = document.getElementById('lot-bid-input');
+            const amount = parseInt(bidInput.value);
+            
+            if (!amount || amount <= 0) {
+                alert('Введите корректную сумму');
+                return;
+            }
+            
+            const result = ui.auctionSystem.placeBid(motorcycleId, amount);
+            
+            if (result.success) {
+                alert('Ставка успешно размещена!');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert('Ошибка: ' + result.message);
+            }
+        }
+        
+        function setupComplaintModal() {
+            const form = document.getElementById('complaint-form');
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    submitComplaint();
+                });
+            }
+        }
+        
+        function showComplaintModal(lotId) {
+            if (!ui.auth.isLoggedIn()) {
+                alert('Для отправки жалобы необходимо войти в систему');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            document.getElementById('complaint-modal').style.display = 'flex';
+            document.getElementById('complaint-form').dataset.lotId = lotId;
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function submitComplaint() {
+    const form = document.getElementById('complaint-form');
+    const lotId = parseInt(form.dataset.lotId);
+    const reason = document.getElementById('complaint-reason').value;
+    const details = document.getElementById('complaint-details').value;
+    
+    if (!reason || !details) {
+        alert('Пожалуйста, заполните все поля');
+        return;
+    }
+    
+    const result = ui.submitComplaint(lotId, reason, details);
+    
+    if (result.success) {
+        alert('✅ Жалоба отправлена администрации. Спасибо за бдительность!');
+        closeModal('complaint-modal');
+        form.reset();
+    } else {
+        alert('❌ Ошибка: ' + result.message);
+    }
+}
+        
+        function addToWatchlist(lotId) {
+            alert(`Лот #${lotId} добавлен в избранное!`);
+        }
+        
+        function shareLot() {
+            const url = window.location.href;
+            const title = document.querySelector('.lot-header h1')?.textContent || 'Лот на MotoAuction';
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: 'Посмотрите этот лот на аукционе мотоциклов!',
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Ссылка скопирована в буфер обмена!');
+                });
+            }
+        }
+    </script>
+    
+    <style>
+        .breadcrumbs {
+            padding: 15px 0;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        .breadcrumbs a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        
+        .breadcrumbs a:hover {
+            color: var(--gold);
+        }
+        
+        .breadcrumbs span {
+            color: var(--text-primary);
+        }
+        
+        .lot-details-section {
+            padding: 40px 0;
+        }
+        
+        .loading-lot {
+            text-align: center;
+            padding: 60px;
+        }
+        
+        .error-message {
+            text-align: center;
+            padding: 60px;
+        }
+        
+        .error-message h2 {
+            margin-bottom: 20px;
+            color: var(--danger);
+        }
+        
+        .lot-main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 992px) {
+            .lot-main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .lot-images-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .main-image-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: var(--bg-secondary);
+            aspect-ratio: 4/3;
+            cursor: pointer;
+        }
+        
+        .lot-main-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .main-image-container:hover .lot-main-image {
+            transform: scale(1.05);
+        }
+        
+        .sold-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sold-badge {
+            background-color: var(--danger);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            transform: rotate(-15deg);
+        }
+        
+        .image-thumbnails {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .thumbnail.active {
+            border-color: var(--gold);
+        }
+        
+        .thumbnail:hover {
+            transform: translateY(-2px);
+        }
+        
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .lot-info-column {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        
+        .lot-header h1 {
+            font-size: 28px;
+            margin: 0;
+            flex: 1;
+        }
+        
+        .lot-status-badge {
+            font-size: 12px;
+            padding: 8px 16px;
+        }
+        
+        .lot-meta-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            background-color: var(--bg-secondary);
+            border-radius: 10px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .meta-item i {
+            font-size: 20px;
+        }
+        
+        .meta-label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .meta-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .lot-price-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%);
+            border-radius: 10px;
+            border: 2px solid var(--gold);
+        }
+        
+        .current-price-box {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .price-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .price-amount {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+            margin: 5px 0;
+        }
+        
+        .starting-price {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .lot-timer-box {
+            text-align: center;
+        }
+        
+        .timer-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .timer-display {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: monospace;
+            color: var(--gold);
+        }
+        
+        .bid-action-section {
+            padding: 25px;
+            background-color: var(--bg-secondary);
+            border-radius: 10px;
+        }
+        
+        .bid-form-large {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .bid-input-group {
+            flex: 1;
+            position: relative;
+        }
+        
+        .bid-input-large {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            padding-right: 50px;
+        }
+        
+        .currency {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 18px;
+        }
+        
+        .bid-hint {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .login-prompt {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .lot-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .lot-bottom-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .lot-bottom-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .lot-description-card {
+            background-color: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        .lot-description-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .description-content {
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+        
+        .bids-history-card {
+            background-color: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        .bids-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .bids-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        
+        .bids-count {
+            background-color: var(--gold);
+            color: black;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .bids-table {
+            overflow-x: auto;
+        }
+        
+        .bids-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .bids-table th {
+            text-align: left;
+            padding: 12px 15px;
+            background-color: var(--bg-primary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .bids-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .bid-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .bid-user i {
+            color: var(--text-secondary);
+            font-size: 20px;
+        }
+        
+        .bid-amount {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        .bid-time {
+            color: var(--text-secondary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .current-bid-badge {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: var(--success);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .winning-bid {
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+        
+        .no-bids {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .no-bids i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .similar-lots {
+            padding: 60px 0;
+            background-color: var(--bg-secondary);
+        }
+        
+        .no-similar-lots {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+        
+        .how-to-bid-section {
+            padding: 60px 0;
+        }
+        
+        .instructions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .instruction-card {
+            text-align: center;
+            padding: 30px 20px;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+        
+        .instruction-number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            border-radius: 50%;
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+        
+        .auction-rules {
+            padding: 60px 0;
+        }
+        
+        .rules-card {
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            border-left: 4px solid var(--gold);
+        }
+        
+        .rules-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .rules-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .rules-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .rules-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .rules-list li::before {
+            content: '•';
+            color: var(--gold);
+            font-size: 20px;
+            position: absolute;
+            left: 0;
+            top: 10px;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+            cursor: default;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: white;
+            cursor: pointer;
+            background: none;
+            border: none;
+            z-index: 10002;
+        }
+        
+        .lightbox-close:hover {
+            color: var(--gold);
+        }
+        
+        .lightbox-prev,
+        .lightbox-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.3s;
+            border: none;
+            z-index: 10002;
+        }
+        
+        .lightbox-prev {
+            left: 20px;
+        }
+        
+        .lightbox-next {
+            right: 20px;
+        }
+        
+        .lightbox-prev:hover,
+        .lightbox-next:hover {
+            background-color: var(--gold);
+            color: #000;
+        }
+        
+        .lightbox-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10002;
+        }
+    </style>
+    <script src="chatbot.js"></script>
+</body>
+</html>

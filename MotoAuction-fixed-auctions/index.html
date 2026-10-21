@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MotoAuction – Мотоциклы с аукционов Японии под заказ</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chatbot.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero {
+            padding: 80px 0;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1a1a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+        }
+        .hero-content {
+            max-width: 800px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-title {
+            font-size: 48px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .section-title {
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background-color: var(--gold);
+        }
+        
+        .price-range {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .price-range-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+        .price-slider {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+        }
+        .price-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gold);
+            cursor: pointer;
+        }
+        .price-values {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .catalog-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .filter-tab {
+            padding: 10px 25px;
+            background-color: var(--bg-card);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            font-weight: 600;
+        }
+        .filter-tab.active {
+            background-color: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+        }
+        .filter-tab:hover:not(.active) {
+            border-color: var(--gold);
+        }
+        
+        .auction-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+        }
+        .auction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2);
+        }
+        .auction-image-container {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+        .auction-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .auction-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--gold);
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .auction-content {
+            padding: 20px;
+        }
+        .auction-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .auction-specs {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .auction-specs i {
+            margin-right: 5px;
+            color: var(--gold);
+        }
+        .auction-price-block {
+            margin: 15px 0;
+        }
+        .auction-price {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        .auction-price-old {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+        .auction-delivery {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+        .auction-delivery i {
+            color: var(--gold);
+            margin-right: 5px;
+        }
+        .auction-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .benefit-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+        }
+        .benefit-card:hover {
+            transform: translateY(-5px);
+        }
+        .benefit-icon {
+            font-size: 48px;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+        .benefit-card h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        .benefit-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .step-card {
+            text-align: center;
+            padding: 30px 20px;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            position: relative;
+        }
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(212, 175, 55, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--gold);
+            margin: 0 auto 20px;
+        }
+        
+        .plus-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        .plus-item {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .plus-item i {
+            font-size: 28px;
+            color: var(--gold);
+        }
+        .plus-item h4 {
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        .plus-item p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .callback-section {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%);
+            border-radius: 20px;
+            padding: 50px;
+            margin: 60px 0;
+        }
+        .callback-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+        .callback-form {
+            background-color: var(--bg-card);
+            padding: 30px;
+            border-radius: 16px;
+        }
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .contact-person {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+        }
+        .contact-avatar {
+            width: 60px;
+            height: 60px;
+            background-color: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .faq-item {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+        }
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        .faq-answer {
+            display: none;
+            margin-top: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+        
+        .footer-contacts {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+        }
+        .footer-contact-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .footer-contact-item i {
+            font-size: 24px;
+            color: var(--gold);
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title { font-size: 32px; }
+            .callback-grid { grid-template-columns: 1fr; }
+            .form-row-2 { grid-template-columns: 1fr; }
+            .callback-section { padding: 30px; }
+            .footer-contacts { flex-direction: column; }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-motorcycle"></i>
+                    <span>Moto</span>Auction
+                </a>
+                <div class="nav-links">
+                    <a href="index.html" class="active"><i class="fas fa-home"></i> Главная</a>
+                    <a href="#catalog"><i class="fas fa-gavel"></i> Каталог</a>
+                    <a href="#how"><i class="fas fa-question-circle"></i> Как мы работаем</a>
+                    <a href="#reviews"><i class="fas fa-star"></i> Отзывы</a>
+                    <a href="#contacts"><i class="fas fa-phone"></i> Контакты</a>
+                </div>
+                <div class="nav-auth" id="auth-buttons"></div>
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">МОТОЦИКЛЫ С АУКЦИОНОВ <span class="gold">ЯПОНИИ</span><br>ПОД ЗАКАЗ</h1>
+                <p class="hero-subtitle">Честно возим мотоциклы из Японии, Китая и Кореи. Вы платите за мотоцикл, а не за чужую жадность.</p>
+                <div class="hero-buttons">
+                    <a href="#callback" class="btn btn-gold"><i class="fas fa-headset"></i> Узнать цену за 5 минут</a>
+                    <a href="#catalog" class="btn btn-outline"><i class="fas fa-search"></i> Смотреть каталог</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-motorcycle"></i></div>
+                    <div class="stat-info">
+                        <h3 id="total-lots">0</h3>
+                        <p>Найдено мотоциклов</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-smile"></i></div>
+                    <div class="stat-info">
+                        <h3 id="happy-clients">0</h3>
+                        <p>Довольных клиентов</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-info">
+                        <h3 id="saved-money">0 ₽</h3>
+                        <p>Сэкономлено клиентами</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="auctions-section" id="catalog">
+        <div class="container">
+            <h2 class="section-title">Мотоциклы с аукционов</h2>
+            
+            <div class="catalog-filters">
+                <div class="filter-tab active" data-country="all">Все</div>
+                <div class="filter-tab" data-country="japan">Япония</div>
+                <div class="filter-tab" data-country="china">Китай</div>
+                <div class="filter-tab" data-country="korea">Корея</div>
+            </div>
+            
+            <div class="price-range">
+                <div class="price-range-header">
+                    <span>Цена</span>
+                    <span id="price-display">до 5 000 000 ₽</span>
+                </div>
+                <input type="range" class="price-slider" id="price-slider" min="0" max="5000000" step="100000" value="5000000">
+                <div class="price-values">
+                    <span>0 ₽</span>
+                    <span>1 млн</span>
+                    <span>2 млн</span>
+                    <span>3 млн</span>
+                    <span>4 млн</span>
+                    <span>5 млн ₽</span>
+                </div>
+            </div>
+            
+            <div class="auctions-grid" id="auctions-grid">
+                <div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Загрузка каталога...</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="howto-section" style="background-color: var(--bg-secondary);">
+        <div class="container">
+            <h2 class="section-title">Преимущества покупки мотоциклов из Японии, Китая и Кореи</h2>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i class="fas fa-chart-line"></i></div>
+                    <h3>Выгода до 35%</h3>
+                    <p>Покупая напрямую, вы исключаете цепочку перекупщиков. Итоговая стоимость значительно ниже рыночной в РФ.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i class="fas fa-file-alt"></i></div>
+                    <h3>Прозрачная история</h3>
+                    <p>Аукционные листы с профессиональным переводом. Вы точно знаете состояние мотоцикла до покупки.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Идеальное состояние</h3>
+                    <p>Мотоциклы без пробега по РФ, обслуживались у дилеров, качественное топливо и идеальные дороги.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i class="fas fa-headset"></i></div>
+                    <h3>Полное сопровождение</h3>
+                    <p>Под ключ: подбор, покупка, доставка, растаможка. Экономим ваше время, нервы и деньги.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="howto-section" id="how">
+        <div class="container">
+            <h2 class="section-title">Как купить мотоцикл без пробега по РФ</h2>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Оставьте заявку</h3>
+                    <p>Расскажите о пожеланиях: марка, бюджет, комплектация. Мы обсудим все детали.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Подбор и расчет</h3>
+                    <p>Определим стоимость с учетом всех расходов и доставки. Подберем идеальный вариант.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Договор и ставка</h3>
+                    <p>Заключаем договор, вы вносите предоплату. Участвуем в торгах, переводим аукционный лист.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3>Доставка и выдача</h3>
+                    <p>Оплата инвойса, доставка, растаможка, мойка. Вы забираете готовый мотоцикл.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="howto-section" style="background-color: var(--bg-secondary);">
+        <div class="container">
+            <h2 class="section-title">Преимущества работы с нами</h2>
+            <div class="plus-grid">
+                <div class="plus-item">
+                    <i class="fas fa-file-signature"></i>
+                    <div>
+                        <h4>Таможенное оформление "под ключ"</h4>
+                        <p>Сами растаможим, заберём с СВХ, пройдём лабораторию, выдадим с полным комплектом документов</p>
+                    </div>
+                </div>
+                <div class="plus-item">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <div>
+                        <h4>Отсутствие скрытых комиссий</h4>
+                        <p>Наша честная комиссия от 50 т.р. - это весь наш заработок. Никаких скрытых платежей.</p>
+                    </div>
+                </div>
+                <div class="plus-item">
+                    <i class="fas fa-coins"></i>
+                    <div>
+                        <h4>Поэтапная оплата</h4>
+                        <p>Предоплата комиссии, оплата за мотоцикл, оплата таможенных платежей, оплата брокерских услуг</p>
+                    </div>
+                </div>
+                <div class="plus-item">
+                    <i class="fas fa-calendar-check"></i>
+                    <div>
+                        <h4>Выдача авто в любой день</h4>
+                        <p>Выдаём помытые мотоциклы в любой день с нашей охраняемой стоянки</p>
+                    </div>
+                </div>
+                <div class="plus-item">
+                    <i class="fas fa-wrench"></i>
+                    <div>
+                        <h4>Любые дополнительные услуги</h4>
+                        <p>Техническое обслуживание, установка доп. оборудования по Вашему желанию</p>
+                    </div>
+                </div>
+                <div class="plus-item">
+                    <i class="fas fa-truck"></i>
+                    <div>
+                        <h4>Отправка по РФ</h4>
+                        <p>Любыми способами: автовозом, железной дорогой, морем</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container" id="callback">
+        <div class="callback-section">
+            <div class="callback-grid">
+                <div>
+                    <h2 style="font-size: 32px; margin-bottom: 20px;">Узнайте цену<br>и сроки поставки<br>за 5 минут!</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 30px;">Перезвоним вам, как только увидим заявку! Ответим на все вопросы и мгновенно сообщим стоимость мотоцикла!</p>
+                    <div class="contact-person">
+                        <div class="contact-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 5px;">[ВАШЕ ИМЯ]</h4>
+                            <p style="color: var(--text-secondary);">Собственник компании</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="callback-form">
+                    <h3 style="margin-bottom: 25px; text-align: center;">Оставить заявку</h3>
+                    <form id="callback-form" onsubmit="sendCallback(event)">
+                        <div class="form-row-2">
+                            <input type="text" class="form-input" placeholder="Ваше имя" required>
+                            <input type="tel" class="form-input" placeholder="Телефон" required>
+                        </div>
+                        <div class="form-group">
+                            <select class="form-input">
+                                <option value="">Как с вами удобнее связаться?</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="telegram">Telegram</option>
+                                <option value="phone">Звонок</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-gold" style="width: 100%;"><i class="fas fa-paper-plane"></i> Отправить заявку</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блок вопросов (FAQ) -->
+    <section class="howto-section" id="faq">
+        <div class="container">
+            <h2 class="section-title">Популярные вопросы</h2>
+            <div class="faq-grid" id="faq-grid">
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Являетесь ли вы посредниками?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Наша компания предоставляет услуги по покупке мотоциклов на японских аукционах. Мы работаем напрямую, а не через третьих лиц. Это позволяет нам контролировать каждый этап сделки и предлагать клиентам честные, прозрачные условия.
+                    </div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Сколько стоят ваши услуги?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <strong>50 000 рублей</strong> — на мотоциклы стоимостью до 1 млн ₽<br>
+                        <strong>70 000 рублей</strong> — на мотоциклы стоимостью от 1 до 2,5 млн ₽<br>
+                        <strong>100 000 рублей</strong> — на мотоциклы стоимостью от 2,5 млн ₽
+                    </div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Как узнать в каком состоянии мотоцикл?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Каждому мотоциклу прилагается аукционный лист, в котором детально описаны все достоинства и недостатки. Мы делаем профессиональный перевод, чтобы вы точно знали, что покупаете.
+                    </div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Какой размер предоплаты?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Предоплата вносится в размере нашей комиссии (от 50 000 ₽). Остальное оплачивается поэтапно: инвойс за мотоцикл, таможенные платежи, брокерские услуги.
+                    </div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Какие гарантии, что мотоцикл придет целым?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Мы предлагаем услугу "Гарантия сохранности" стоимостью 1% от стоимости мотоцикла. Если во время транспортировки будут повреждения, мы возместим ущерб.
+                    </div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Какое преимущество покупки через вашу компанию?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Мы работаем более 10 лет, наши специалисты обладают большими знаниями. Мы уделяем внимание всем деталям процесса покупки, доставки и таможенного оформления, что помогает избежать неожиданных затрат.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="howto-section" id="contacts" style="background-color: var(--bg-secondary);">
+        <div class="container">
+            <h2 class="section-title">Наш офис</h2>
+            <div style="background-color: var(--bg-card); border-radius: 16px; overflow: hidden;">
+                <div style="display: flex; justify-content: center; align-items: center; padding: 20px;">
+                    <i class="fas fa-map-marker-alt fa-3x gold"></i>
+                </div>
+                <iframe src="https://yandex.ru/map-widget/v1/?um=constructor:YOUR_ID&source=constructor" width="100%" height="300" frameborder="0"></iframe>
+            </div>
+            <div class="contact-info" style="margin-top: 30px; text-align: center;">
+                <h3>Наши контакты</h3>
+                <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 25px;">
+                    <p><i class="fas fa-map-marker-alt gold"></i> <strong>Адрес:</strong> г. Саратов, ул. Дубовая 52, д. 67</p>
+                    <p><i class="fas fa-phone-alt gold"></i> <strong>Телефон:</strong> +7 (909)340-70-08</p>
+                    <p><i class="fas fa-envelope gold"></i> <strong>Email:</strong>  egorte2008@email.com</p>
+                </div>
+                <div style="margin-top: 20px;">
+                    <p><i class="fas fa-clock gold"></i> <strong>Режим работы:</strong>  Пн-Пт: 10:00 - 19:00, Сб: 11:00 - 16:00</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-contacts">
+                <div class="footer-contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <strong>Адрес офиса</strong><br>
+                         г. Саратов, ул. Дубовая 52, д. 67
+                    </div>
+                </div>
+                <div class="footer-contact-item">
+                    <i class="fas fa-phone-alt"></i>
+                    <div>
+                        <strong>Телефон</strong><br>
+                         +7 (909) 340-70-08
+                    </div>
+                </div>
+                <div class="footer-contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <strong>Email</strong><br>
+                         egorte2008@email.com
+                    </div>
+                </div>
+                <div class="footer-contact-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <strong>Режим работы</strong><br>
+                         Пн-Пт: 10:00 - 19:00
+                    </div>
+                </div>
+            </div>
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo"><i class="fas fa-motorcycle"></i><span>Moto</span>Auction</a>
+                    <p>Честно возим мотоциклы из Японии, Китая и Кореи под заказ</p>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html">Главная</a>
+                    <a href="#catalog">Каталог</a>
+                    <a href="#how">Как купить</a>
+                    <a href="#faq">Вопросы</a>
+                    <a href="#contacts">Контакты</a>
+                </div>
+            </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="chatbot.js"></script>
+    <script>
+        
+        let currentCountry = 'all';
+        let currentMaxPrice = 5000000;
+        
+        function loadAuctions() {
+            const motorcycles = ui.dataStore.getMotorcycles();
+            const container = document.getElementById('auctions-grid');
+            
+            const activeAuctions = motorcycles.filter(m =>
+                m.status === 'active' && (!m.endDate || new Date(m.endDate).getTime() > Date.now())
+            );
+            
+            console.log('Всего лотов в системе:', motorcycles.length);
+            console.log('Активных лотов:', activeAuctions.length);
+            
+            if (activeAuctions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-motorcycle fa-3x gold"></i>
+                        <h3>Нет активных аукционов</h3>
+                        <p>Будьте первым, кто выставит свой мотоцикл на продажу!</p>
+                        <a href="create-lot.html" class="btn btn-gold">Создать лот</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            const countryByBrand = {
+                'Yamaha': 'japan', 'Honda': 'japan', 'Suzuki': 'japan', 'Kawasaki': 'japan',
+                'Harley-Davidson': 'other', 'BMW': 'other', 'Ducati': 'other',
+                'Triumph': 'other', 'KTM': 'other', 'Aprilia': 'other'
+            };
+            let filtered = activeAuctions;
+            if (currentCountry !== 'all') {
+                filtered = filtered.filter(lot => (lot.country || countryByBrand[lot.brand] || 'other') === currentCountry);
+            }
+            filtered = filtered.filter(lot => Number(lot.currentPrice || 0) <= currentMaxPrice);
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fas fa-motorcycle fa-3x gold"></i><h3>Ничего не найдено</h3><p>Попробуйте изменить параметры поиска</p></div>`;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(auction => {
+                const endDate = auction.endDate ? new Date(auction.endDate) : null;
+                const timeLeft = endDate ? Math.max(0, endDate.getTime() - Date.now()) : 0;
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                
+                return `
+                    <div class="auction-card" data-status="${auction.status}">
+                        <div class="auction-image-container">
+                            <img src="${auction.image}" alt="${auction.title}" class="auction-image">
+                            <div class="auction-badge">Активен</div>
+                        </div>
+                        <div class="auction-content">
+                            <h3 class="auction-title">${auction.title}</h3>
+                            <div class="auction-specs">
+                                <span><i class="fas fa-tag"></i> ${auction.brand}</span>
+                                <span><i class="fas fa-calendar"></i> ${auction.year} г.</span>
+                            </div>
+                            <div class="auction-price-block">
+                                <div class="auction-price">${auction.currentPrice.toLocaleString()} ₽</div>
+                                <div class="auction-delivery"><i class="fas fa-clock"></i> До конца: ${days}д ${hours}ч</div>
+                            </div>
+                            <div class="auction-actions">
+                                <a href="lot.html?id=${auction.id}" class="btn btn-outline btn-small">
+                                    <i class="fas fa-eye"></i> Детали
+                                </a>
+                                ${ui.auth.isLoggedIn() ? `
+                                    <button onclick="ui.placeBidModal(${auction.id}, ${auction.currentPrice})" class="btn btn-gold btn-small">
+                                        <i class="fas fa-gavel"></i> Ставка
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function loadStats() {
+    const motorcycles = ui.dataStore.getMotorcycles();
+    const users = ui.dataStore.getUsers();
+    
+    const totalLots = motorcycles.length;
+    
+    const totalUsers = users.length;
+    
+    const totalSales = motorcycles
+        .filter(m => m.status === 'sold')
+        .reduce((sum, m) => sum + m.currentPrice, 0);
+    
+    const totalLotsEl = document.getElementById('total-lots');
+    const happyClientsEl = document.getElementById('happy-clients');
+    const savedMoneyEl = document.getElementById('saved-money');
+    
+    if (totalLotsEl) totalLotsEl.textContent = totalLots;
+    if (happyClientsEl) happyClientsEl.textContent = totalUsers;
+    if (savedMoneyEl) savedMoneyEl.textContent = totalSales.toLocaleString() + ' ₽';
+}
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            ui.initTheme();
+            ui.updateAuthButtons();
+            
+            loadAuctions();
+            loadStats();
+            
+            // Обновляем каталог, если лот создан/одобрен в другой вкладке.
+            window.addEventListener('storage', function(event) {
+                if (event.key === 'motorcycles') {
+                    loadAuctions();
+                    loadStats();
+                }
+            });
+            
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCountry = this.dataset.country;
+                    loadAuctions();
+                });
+            });
+            
+            const slider = document.getElementById('price-slider');
+            const priceDisplay = document.getElementById('price-display');
+            if (slider) {
+                slider.addEventListener('input', function() {
+                    currentMaxPrice = parseInt(this.value);
+                    priceDisplay.textContent = `до ${currentMaxPrice.toLocaleString()} ₽`;
+                    loadAuctions();
+                });
+            }
+        });
+
+        function toggleFaq(element) {
+            element.classList.toggle('active');
+            const icon = element.querySelector('.fa-chevron-down, .fa-chevron-up');
+            if (element.classList.contains('active')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+        
+        function sendCallback(event) {
+            event.preventDefault();
+            alert('✅ Спасибо! Наш менеджер свяжется с вами в ближайшее время.');
+            event.target.reset();
+        }
+
+
+    </script>
+</body>
+</html>
