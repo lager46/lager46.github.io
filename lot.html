@@ -172,7 +172,7 @@
             setupComplaintModal();
         });
         
-        function loadLotDetails() {
+        async function loadLotDetails() {
             const urlParams = new URLSearchParams(window.location.search);
             const lotId = parseInt(urlParams.get('id'));
             
@@ -187,9 +187,17 @@
                 return;
             }
             
-            const motorcycles = ui.dataStore.getMotorcycles();
-            const lot = motorcycles.find(m => m.id === lotId);
-            
+            let lot = null;
+            try {
+                lot = await window.motoFetchMotorcycle(lotId);
+                if (lot) {
+                    const cached = JSON.parse(localStorage.getItem('motorcycles') || '[]').filter(m => Number(m.id) !== Number(lot.id));
+                    cached.push(lot);
+                    localStorage.setItem('motorcycles', JSON.stringify(cached));
+                }
+            } catch (error) {
+                console.error('Не удалось загрузить лот из Supabase:', error);
+            }
             if (!lot) {
                 document.getElementById('lot-details').innerHTML = `
                     <div class="error-message">
@@ -203,9 +211,9 @@
             
             document.getElementById('lot-breadcrumb').textContent = lot.title;
             
-            const endDate = new Date(lot.endDate);
+            const endDate = lot.endDate ? new Date(lot.endDate) : null;
             const now = new Date();
-            const timeLeft = endDate - now;
+            const timeLeft = endDate ? Math.max(0, endDate - now) : 0;
             const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
             const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             
@@ -498,12 +506,14 @@
             });
         }
         
-        function loadSimilarLots() {
+        async function loadSimilarLots() {
             const urlParams = new URLSearchParams(window.location.search);
             const currentLotId = parseInt(urlParams.get('id'));
             
-            const motorcycles = ui.dataStore.getMotorcycles();
-            const currentLot = motorcycles.find(m => m.id === currentLotId);
+            let motorcycles = [];
+            try { motorcycles = await window.motoFetchMotorcycles(); }
+            catch (error) { console.error('Не удалось загрузить похожие лоты:', error); return; }
+            const currentLot = motorcycles.find(m => Number(m.id) === Number(currentLotId));
             
             if (!currentLot) return;
             

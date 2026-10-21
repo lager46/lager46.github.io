@@ -878,10 +878,17 @@
     if (savedMoneyEl) savedMoneyEl.textContent = totalSales.toLocaleString() + ' ₽';
 }
         
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             ui.initTheme();
             ui.updateAuthButtons();
-            
+            try {
+                await window.motoFetchMotorcycles();
+            } catch (error) {
+                console.error('Не удалось загрузить каталог из Supabase:', error);
+                localStorage.setItem('motorcycles', '[]');
+                const grid = document.getElementById('auctions-grid');
+                if (grid) grid.innerHTML = '<div class="empty-state"><h3>Не удалось загрузить аукционы</h3><p>Проверьте подключение Supabase и политики доступа, затем обновите страницу.</p></div>';
+            }
             loadAuctions();
             loadStats();
             

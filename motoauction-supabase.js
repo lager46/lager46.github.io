@@ -73,6 +73,35 @@
     if (error) throw error;
     return data;
   };
+
+  // Convert database rows to the shape used by the existing UI.
+  window.motoMapMotorcycle = function (row) {
+    if (!row) return null;
+    return {
+      id: Number(row.id), title: row.title || [row.brand, row.model].filter(Boolean).join(' ') || 'Мотоцикл',
+      brand: row.brand || '', model: row.model || '', year: row.year || '',
+      description: row.description || '', startingPrice: Number(row.starting_price || 0),
+      currentPrice: Number(row.current_price ?? row.starting_price ?? 0), image: row.image_url || '',
+      images: row.image_url ? [row.image_url] : [], sellerId: row.user_id || '',
+      status: row.status || 'pending', endDate: row.end_date || null, createdAt: row.created_at || null, bids: []
+    };
+  };
+  window.motoFetchMotorcycles = async function () {
+    const sb = await window.motoSupabaseReady();
+    const { data, error } = await sb.from('motorcycles').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    const rows = (data || []).map(window.motoMapMotorcycle);
+    // Keep legacy UI components in sync with the RLS-filtered database result.
+    localStorage.setItem('motorcycles', JSON.stringify(rows));
+    return rows;
+  };
+  window.motoFetchMotorcycle = async function (id) {
+    const sb = await window.motoSupabaseReady();
+    const { data, error } = await sb.from('motorcycles').select('*').eq('id', Number(id)).maybeSingle();
+    if (error) throw error;
+    return window.motoMapMotorcycle(data);
+  };
+
   window.motoPlaceBid = async function (motorcycleId, amount) {
     const sb = await window.motoSupabaseReady();
     const { data, error } = await sb.rpc('place_bid', {
