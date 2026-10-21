@@ -164,13 +164,10 @@
     <script src="motoauction-supabase.js"></script>
     <script src="script.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            ui.initTheme();
-            
-            if (ui.auth.isLoggedIn()) {
-                window.location.href = 'dashboard.html';
-            }
-        });
+        
+        document.addEventListener('DOMContentLoaded', function () {
+  ui.initTheme();
+});
         
         function togglePassword() {
             const passwordInput = document.getElementById('password');
@@ -187,36 +184,47 @@
             }
         }
         
-        function showForgotPassword() {
-            const email = prompt('Введите ваш email для восстановления пароля:');
-            if (email) {
-                alert(`Инструкция по восстановлению пароля будет отправлена на ${email}\n(функция в разработке)`);
-            }
-        }
         
-        window.loginUser = function(event) {
-            event.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const remember = document.getElementById('remember').checked;
-            
-            if (remember) {
-                localStorage.setItem('rememberedEmail', email);
-            }
-            
-            const result = ui.auth.login(email, password);
-            
-            if (result.success) {
-                alert('Вход выполнен успешно!');
-                
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 500);
-            } else {
-                showLoginError(result.message);
-            }
-        };
+window.loginUser = async function (event) {
+  event.preventDefault();
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const remember = document.getElementById('remember').checked;
+  const button = document.querySelector('#login-form button[type="submit"]');
+
+  if (button) button.disabled = true;
+
+  try {
+    // Настоящий вход через Supabase Authentication
+    await window.motoLogin(email, password);
+
+    if (remember) {
+      localStorage.setItem('rememberedEmail', email);
+    } else {
+      localStorage.removeItem('rememberedEmail');
+    }
+
+    // Проверяем административную роль в базе
+    const isAdmin = await window.motoIsAdmin();
+
+    alert('Вход выполнен успешно!');
+
+    if (isAdmin) {
+      window.location.href = 'admin.html';
+    } else {
+      window.location.href = 'dashboard.html';
+    }
+  } catch (error) {
+    console.error('Ошибка авторизации:', error);
+    showLoginError(
+      error.message || 'Не удалось войти. Проверьте данные и настройки аккаунта.'
+    );
+  } finally {
+    if (button) button.disabled = false;
+  }
+};
+
         
         function showLoginError(message) {
             let errorElement = document.querySelector('.login-error');
