@@ -516,19 +516,36 @@
     <script src="motoauction-supabase.js"></script>
     <script src="script.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!ui.auth.isLoggedIn()) {
-                alert('Для доступа к личному кабинету необходимо войти в систему');
-                window.location.href = 'login.html';
-                return;
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const authUser = await window.motoGetUser();
+                if (!authUser) {
+                    localStorage.removeItem('currentUser');
+                    alert('Для доступа к личному кабинету необходимо войти в систему');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                const metadata = authUser.user_metadata || {};
+                const appUser = {
+                    id: authUser.id,
+                    email: authUser.email || '',
+                    username: metadata.username || metadata.full_name || authUser.email || 'Пользователь',
+                    phone: metadata.phone || '',
+                    role: 'user',
+                    createdAt: authUser.created_at,
+                    balance: 0
+                };
+                localStorage.setItem('currentUser', JSON.stringify(appUser));
+                ui.auth.currentUser = appUser;
+                ui.initTheme();
+                ui.updateAuthButtons();
+                await loadDashboardData();
+                showTab(window.location.hash === '#my-lots' ? 'my-lots' : 'profile');
+                initDashboardThemeToggle();
+            } catch (error) {
+                console.error('Ошибка загрузки личного кабинета:', error);
+                alert('Не удалось загрузить личный кабинет из Supabase: ' + (error.message || error));
             }
-            
-            ui.initTheme();
-            ui.updateAuthButtons();
-            loadDashboardData();
-            showTab(window.location.hash === '#my-lots' ? 'my-lots' : 'profile');
-            
-            initDashboardThemeToggle();
         });
         
         function initDashboardThemeToggle() {
@@ -563,19 +580,41 @@
             updateToggleState();
         }
         
-        function loadDashboardData() {
+        async function loadDashboardData() {
             const user = ui.auth.currentUser;
             if (!user) return;
-            
+            const sb = await window.motoSupabaseReady();
+            const [lotsResult, bidsResult, salesResult] = await Promise.all([
+                sb.from('motorcycles').select('*').order('created_at', { ascending: false }),
+                sb.from('bids').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+                sb.from('sales').select('*').eq('buyer_id', user.id).order('created_at', { ascending: false })
+            ]);
+            if (lotsResult.error) throw lotsResult.error;
+            if (bidsResult.error) throw bidsResult.error;
+            if (salesResult.error) throw salesResult.error;
+            const lots = (lotsResult.data || []).map(window.motoMapMotorcycle);
+            (salesResult.data || []).forEach(sale => {
+                const lot = lots.find(item => Number(item.id) === Number(sale.motorcycle_id));
+                if (lot) { lot.buyerId = sale.buyer_id; lot.currentPrice = Number(sale.final_price || lot.currentPrice); lot.updatedAt = sale.created_at; }
+            });
+            const bids = bidsResult.data || [];
+            bids.forEach(row => {
+                const lot = lots.find(item => Number(item.id) === Number(row.motorcycle_id));
+                if (lot) lot.bids.push({
+                    userId: row.user_id,
+                    amount: Number(row.amount),
+                    timestamp: row.created_at,
+                    username: user.username
+                });
+            });
+            localStorage.setItem('motorcycles', JSON.stringify(lots));
             document.getElementById('user-name').textContent = user.username;
             document.getElementById('user-email').textContent = user.email;
             document.getElementById('profile-username').textContent = user.username;
             document.getElementById('profile-email').textContent = user.email;
             document.getElementById('profile-phone').textContent = user.phone || 'Не указан';
-            document.getElementById('profile-created').textContent = 
-                user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Сегодня';
-            document.getElementById('user-balance').textContent = (user.balance || 0).toLocaleString() + ' ₽';
-            
+            document.getElementById('profile-created').textContent = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Сегодня';
+            document.getElementById('user-balance').textContent = '0 ₽';
             loadUserStats();
             loadUserLots();
             loadUserBids();
@@ -611,7 +650,7 @@
             const motorcycles = ui.dataStore.getMotorcycles();
             const user = ui.auth.currentUser;
             const filter = document.getElementById('lot-filter')?.value || 'all';
-            const allMyLots = motorcycles.filter(m => Number(m.sellerId) === Number(user.id));
+            const allMyLots = motorcycles.filter(m => String(m.sellerId) === String(user.id));
             const myLots = filter === 'all' ? allMyLots : allMyLots.filter(m => m.status === filter);
             
             const container = document.getElementById('my-lots-container');
@@ -657,7 +696,7 @@
                                     </span>
                                  </td>
                                 <td class="gold">${lot.currentPrice.toLocaleString()} ₽</td>
-                                <td>${new Date(lot.endDate).toLocaleDateString()}</td>
+                                <td>${lot.endDate ? new Date(lot.endDate).toLocaleDateString() : 'Не указана'}</td>
                                 <td>
                                     <a href="lot.html?id=${lot.id}" class="btn btn-outline btn-small">Просмотр</a>
                                 </td>
@@ -993,6 +1032,7 @@
             }
         }
     </style>
+    <script src="chat-config.js"></script>
     <script src="chatbot.js"></script>
 </body>
 </html>

@@ -580,24 +580,16 @@
             setInterval(updateTimer, 1000);
         }
         
-        function placeBidOnLot(motorcycleId) {
+        async function placeBidOnLot(motorcycleId) {
             const bidInput = document.getElementById('lot-bid-input');
-            const amount = parseInt(bidInput.value);
-            
-            if (!amount || amount <= 0) {
-                alert('Введите корректную сумму');
-                return;
-            }
-            
-            const result = ui.auctionSystem.placeBid(motorcycleId, amount);
-            
-            if (result.success) {
+            const amount = Number(bidInput.value);
+            if (!Number.isFinite(amount) || amount <= 0) { alert('Введите корректную сумму'); return; }
+            try {
+                await window.motoPlaceBid(motorcycleId, amount);
                 alert('Ставка успешно размещена!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                alert('Ошибка: ' + result.message);
+                window.location.reload();
+            } catch (error) {
+                alert('Не удалось разместить ставку: ' + (error.message || error));
             }
         }
         
@@ -626,27 +618,20 @@
             document.getElementById(modalId).style.display = 'none';
         }
         
-        function submitComplaint() {
-    const form = document.getElementById('complaint-form');
-    const lotId = parseInt(form.dataset.lotId);
-    const reason = document.getElementById('complaint-reason').value;
-    const details = document.getElementById('complaint-details').value;
-    
-    if (!reason || !details) {
-        alert('Пожалуйста, заполните все поля');
-        return;
-    }
-    
-    const result = ui.submitComplaint(lotId, reason, details);
-    
-    if (result.success) {
-        alert('✅ Жалоба отправлена администрации. Спасибо за бдительность!');
-        closeModal('complaint-modal');
-        form.reset();
-    } else {
-        alert('❌ Ошибка: ' + result.message);
-    }
-}
+        async function submitComplaint() {
+            const form = document.getElementById('complaint-form');
+            const lotId = parseInt(form.dataset.lotId, 10);
+            const reason = document.getElementById('complaint-reason').value;
+            const details = document.getElementById('complaint-details').value;
+            if (!reason || !details.trim()) { alert('Пожалуйста, заполните все поля'); return; }
+            try {
+                await window.motoSubmitComplaint(lotId, reason, details);
+                alert('Жалоба отправлена администрации. Спасибо!');
+                closeModal('complaint-modal'); form.reset();
+            } catch (error) {
+                alert('Не удалось отправить жалобу: ' + (error.message || error));
+            }
+        }
         
         function addToWatchlist(lotId) {
             alert(`Лот #${lotId} добавлен в избранное!`);
@@ -1323,6 +1308,7 @@
             z-index: 10002;
         }
     </style>
+    <script src="chat-config.js"></script>
     <script src="chatbot.js"></script>
 </body>
 </html>

@@ -4,8 +4,17 @@
 require('dotenv').config();
 const express = require('express');
 const OpenAI = require('openai');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const app = express();
+const allowedOrigin = process.env.ALLOWED_ORIGIN || '';
+app.use(cors({ origin: (origin, callback) => {
+  if (!origin || origin === allowedOrigin) return callback(null, true);
+  return callback(new Error('Origin not allowed'));
+}}));
 app.use(express.json({ limit: '16kb' }));
+app.use('/api/chat', rateLimit({ windowMs: 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false }));
+app.get('/health', (_req, res) => res.json({ ok: true }));
 const client = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
 app.post('/api/chat', async (req, res) => {

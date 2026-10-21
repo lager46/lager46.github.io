@@ -487,14 +487,21 @@
     <script>
         let currentAllLotsFilter = 'all';
         
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!ui.auth.isAdmin()) {
-                alert('Доступ запрещен! Требуются права администратора.');
-                window.location.href = 'index.html';
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const authUser = await window.motoGetUser();
+                if (!authUser || !(await window.motoIsAdmin())) {
+                    alert('Доступ запрещён. Войдите в аккаунт, которому назначена роль admin в Supabase.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+            } catch (error) {
+                alert('Не удалось проверить права администратора: ' + (error.message || error));
+                window.location.href = 'login.html';
                 return;
             }
             ui.initTheme();
-            loadAdminData();
+            await loadAdminData();
             
             document.querySelectorAll('.admin-menu a').forEach(link => {
                 link.addEventListener('click', function(e) {
@@ -512,32 +519,57 @@
             document.getElementById(`${tabName}-tab`).classList.add('active');
         }
         
-        function loadAdminData() {
-            const motorcycles = ui.dataStore.getMotorcycles();
-            const users = ui.dataStore.getUsers();
-            const complaints = JSON.parse(localStorage.getItem('complaints')) || [];
-            
-            const pendingLots = motorcycles.filter(m => m.status === 'pending');
-            const activeLots = motorcycles.filter(m => m.status === 'active');
-            const soldLots = motorcycles.filter(m => m.status === 'sold');
-            
-            document.getElementById('pending-count').textContent = pendingLots.length;
-            document.getElementById('complaints-count').textContent = complaints.length;
-            
-            document.getElementById('stat-total-lots').textContent = motorcycles.length;
-            document.getElementById('stat-pending-lots').textContent = pendingLots.length;
-            document.getElementById('stat-active-lots').textContent = activeLots.length;
-            document.getElementById('stat-sold-lots').textContent = soldLots.length;
-            document.getElementById('stat-users').textContent = users.length;
-            document.getElementById('stat-complaints').textContent = complaints.length;
-            
-            renderPendingLots(pendingLots);
-            renderAllLots(motorcycles);
-            renderUsers(users);
-            renderComplaints(complaints);
-            renderSales(soldLots);
+        async function loadAdminData() {
+            try {
+                const sb = await window.motoSupabaseReady();
+                const [lots, usersResult, complaintsResult, salesResult] = await Promise.all([
+                    window.motoFetchMotorcycles(),
+                    sb.rpc('admin_list_users'),
+                    sb.from('complaints').select('*').order('created_at', { ascending: false }),
+                    sb.from('sales').select('*').order('created_at', { ascending: false })
+                ]);
+                if (usersResult.error) throw usersResult.error;
+                if (complaintsResult.error) throw complaintsResult.error;
+                if (salesResult.error) throw salesResult.error;
+                const users = (usersResult.data || []).map(u => ({
+                    id: u.id, username: u.username || u.email || 'Пользователь', email: u.email || '', phone: u.phone || '',
+                    role: u.role || 'user', isBlocked: !!u.is_blocked, createdAt: u.created_at
+                }));
+                const complaints = (complaintsResult.data || []).filter(c => c.status !== 'resolved').map(c => ({
+                    id: c.id, lotId: c.motorcycle_id, userId: c.user_id, reason: c.reason || c.reeson || 'Не указана',
+                    details: c.details || '', date: c.created_at, status: c.status
+                }));
+                const salesByLot = new Map((salesResult.data || []).map(s => [Number(s.motorcycle_id), s]));
+                const soldLots = lots.filter(l => l.status === 'sold').map(l => {
+                    const sale = salesByLot.get(Number(l.id));
+                    return {...l, buyerId: sale?.buyer_id || null, currentPrice: Number(sale?.final_price ?? l.currentPrice), updatedAt: sale?.created_at || l.createdAt};
+                });
+                const pendingLots = lots.filter(m => m.status === 'pending');
+                const activeLots = lots.filter(m => m.status === 'active');
+                document.getElementById('pending-count').textContent = pendingLots.length;
+                document.getElementById('complaints-count').textContent = complaints.length;
+                document.getElementById('stat-total-lots').textContent = lots.length;
+                document.getElementById('stat-pending-lots').textContent = pendingLots.length;
+                document.getElementById('stat-active-lots').textContent = activeLots.length;
+                document.getElementById('stat-sold-lots').textContent = soldLots.length;
+                document.getElementById('stat-users').textContent = users.length;
+                document.getElementById('stat-complaints').textContent = complaints.length;
+                renderPendingLots(pendingLots);
+                renderAllLots(lots);
+                renderUsers(users);
+                renderComplaints(complaints);
+                renderSales(soldLots);
+                window.motoAdminCache = {lots, users, complaints, sales: salesResult.data || []};
+            } catch (error) {
+                console.error('Ошибка загрузки админ-панели:', error);
+                const msg = 'Не удалось загрузить данные Supabase: ' + (error.message || error);
+                ['pending-lots-container','all-lots-container','users-container','complaints-container','sales-container'].forEach(id => {
+                    const el = document.getElementById(id); if (el) el.innerHTML = `<div class="empty-state-admin"><h3>${msg}</h3></div>`;
+                });
+                alert(msg);
+            }
         }
-        
+
         function renderPendingLots(lots) {
             const container = document.getElementById('pending-lots-container');
             if (!container) return;
@@ -557,13 +589,13 @@
                 container.innerHTML = `<div class="empty-state-admin"><i class="fas fa-motorcycle"></i><h3>Нет лотов</h3></div>`;
                 return;
             }
-            container.innerHTML = `<table class="admin-table"><thead><tr><th>ID</th><th>Фото</th><th>Название</th><th>Продавец</th><th>Цена</th><th>Статус</th><th>Действия</th></tr></thead><tbody>${filteredLots.map(lot => `<tr><td>#${lot.id}</td><td><img src="${lot.image}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;"></td><td><strong>${lot.title}</strong><br><small>${lot.brand} ${lot.model}</small></td><td>#${lot.sellerId}</td><td class="gold">${lot.currentPrice.toLocaleString()} ₽</td><td><span class="status-badge status-${lot.status}">${lot.status === 'active' ? 'Активен' : lot.status === 'pending' ? 'На модерации' : lot.status === 'rejected' ? 'Отклонён' : 'Продан'}</span></td><td class="action-btns"><button class="btn-icon btn-view" onclick="viewLot(${lot.id})" title="Просмотр"><i class="fas fa-eye"></i></button>${lot.status === 'pending' ? `<button class="btn-icon btn-approve" onclick="approveLot(${lot.id})" title="Одобрить"><i class="fas fa-check"></i></button>` : ''}<button class="btn-icon btn-delete" onclick="deleteLot(${lot.id})" title="Удалить"><i class="fas fa-trash-alt"></i></button></td></tr>`).join('')}</tbody></table>`;
+            container.innerHTML = `<table class="admin-table"><thead><tr><th>ID</th><th>Фото</th><th>Название</th><th>Продавец</th><th>Цена</th><th>Статус</th><th>Действия</th></tr></thead><tbody>${filteredLots.map(lot => `<tr><td>#${lot.id}</td><td><img src="${lot.image}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;"></td><td><strong>${lot.title}</strong><br><small>${lot.brand} ${lot.model}</small></td><td>#${lot.sellerId}</td><td class="gold">${lot.currentPrice.toLocaleString()} ₽</td><td><span class="status-badge status-${lot.status}">${lot.status === 'active' ? 'Активен' : lot.status === 'pending' ? 'На модерации' : lot.status === 'rejected' ? 'Отклонён' : lot.status === 'ended' ? 'Завершён без ставок' : 'Продан'}</span></td><td class="action-btns"><button class="btn-icon btn-view" onclick="viewLot(${lot.id})" title="Просмотр"><i class="fas fa-eye"></i></button>${lot.status === 'pending' ? `<button class="btn-icon btn-approve" onclick="approveLot(${lot.id})" title="Одобрить"><i class="fas fa-check"></i></button>` : ''}<button class="btn-icon btn-delete" onclick="deleteLot(${lot.id})" title="Удалить"><i class="fas fa-trash-alt"></i></button></td></tr>`).join('')}</tbody></table>`;
         }
         
         function renderUsers(users) {
             const container = document.getElementById('users-container');
             if (!container) return;
-            container.innerHTML = `<table class="admin-table"><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Телефон</th><th>Роль</th><th>Статус</th><th>Действия</th></tr></thead><tbody>${users.map(user => `<tr><td>#${user.id}</td><td><i class="fas fa-user-circle"></i> ${user.username}</td><td>${user.email}</td><td>${user.phone || '—'}</td><td><span class="status-badge ${user.role === 'admin' ? 'status-active' : ''}">${user.role === 'admin' ? 'Админ' : 'Пользователь'}</span></td><td><span class="status-badge ${user.isBlocked ? 'status-blocked' : 'status-active'}">${user.isBlocked ? 'Заблокирован' : 'Активен'}</span></td><td class="action-btns">${!user.isBlocked && user.role !== 'admin' ? `<button class="btn-icon btn-block" onclick="blockUser(${user.id})"><i class="fas fa-ban"></i></button>` : ''}${user.isBlocked ? `<button class="btn-icon btn-approve" onclick="unblockUser(${user.id})"><i class="fas fa-check"></i></button>` : ''}</td></tr>`).join('')}</tbody></table>`;
+            container.innerHTML = `<table class="admin-table"><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Телефон</th><th>Роль</th><th>Статус</th><th>Действия</th></tr></thead><tbody>${users.map(user => `<tr><td>#${user.id}</td><td><i class="fas fa-user-circle"></i> ${user.username}</td><td>${user.email}</td><td>${user.phone || '—'}</td><td><span class="status-badge ${user.role === 'admin' ? 'status-active' : ''}">${user.role === 'admin' ? 'Админ' : 'Пользователь'}</span></td><td><span class="status-badge ${user.isBlocked ? 'status-blocked' : 'status-active'}">${user.isBlocked ? 'Заблокирован' : 'Активен'}</span></td><td class="action-btns">${!user.isBlocked && user.role !== 'admin' ? `<button class="btn-icon btn-block" onclick="blockUser('${user.id}')"><i class="fas fa-ban"></i></button>` : ''}${user.isBlocked ? `<button class="btn-icon btn-approve" onclick="unblockUser('${user.id}')"><i class="fas fa-check"></i></button>` : ''}</td></tr>`).join('')}</tbody></table>`;
         }
         
         function renderComplaints(complaints) {
@@ -593,110 +625,52 @@
         
         function filterAllLots() {
             currentAllLotsFilter = document.getElementById('all-lots-filter').value;
-            const motorcycles = ui.dataStore.getMotorcycles();
+            const motorcycles = (window.motoAdminCache && window.motoAdminCache.lots) || [];
             renderAllLots(motorcycles);
         }
         
-        function approveLot(lotId) {
-            if (confirm('Одобрить этот лот? Он станет доступен на сайте.')) {
-                const result = ui.auctionSystem.approveAuction(lotId);
-                if (result.success) {
-                    alert('✅ Лот одобрен!');
-                    refreshData();
-                } else {
-                    alert('❌ Ошибка: ' + result.message);
-                }
-            }
+        async function approveLot(lotId) {
+            if (!confirm('Одобрить этот лот? Он станет доступен на сайте.')) return;
+            try { await window.motoAdminSetLotStatus(lotId, 'active'); alert('Лот одобрен.'); await refreshData(); }
+            catch (error) { alert('Не удалось одобрить лот: ' + (error.message || error)); }
         }
-        
-        function rejectLot(lotId) {
+        async function rejectLot(lotId) {
             const reason = prompt('Укажите причину отклонения:');
             if (reason === null) return;
-            const motorcycles = ui.dataStore.getMotorcycles();
-            const lot = motorcycles.find(item => Number(item.id) === Number(lotId));
-            if (!lot) {
-                alert('❌ Лот не найден');
-                refreshData();
-                return;
-            }
-            lot.status = 'rejected';
-            lot.rejectionReason = reason.trim() || 'Причина не указана';
-            try {
-                localStorage.setItem('motorcycles', JSON.stringify(motorcycles));
-                alert(`Лот #${lotId} отклонён. Причина: ${lot.rejectionReason}`);
-                refreshData();
-            } catch (error) {
-                console.error('Не удалось сохранить отклонение лота:', error);
-                alert('Не удалось сохранить изменения. Проверьте свободное место в хранилище браузера.');
-            }
+            try { await window.motoAdminSetLotStatus(lotId, 'rejected', reason); alert('Лот отклонён.'); await refreshData(); }
+            catch (error) { alert('Не удалось отклонить лот: ' + (error.message || error)); }
+        }
+        async function deleteLot(lotId) {
+            if (!confirm('Скрыть лот? История ставок и продаж сохранится.')) return;
+            try { await window.motoAdminDeleteLot(lotId); alert('Лот скрыт. История сохранена.'); await refreshData(); }
+            catch (error) { alert('Не удалось удалить лот: ' + (error.message || error)); }
+        }
+        async function blockUser(userId) {
+            if (!confirm('Заблокировать этого пользователя?')) return;
+            try { await window.motoAdminSetUserBlocked(userId, true); alert('Пользователь заблокирован.'); await refreshData(); }
+            catch (error) { alert('Не удалось заблокировать пользователя: ' + (error.message || error)); }
+        }
+        async function unblockUser(userId) {
+            try { await window.motoAdminSetUserBlocked(userId, false); alert('Пользователь разблокирован.'); await refreshData(); }
+            catch (error) { alert('Не удалось разблокировать пользователя: ' + (error.message || error)); }
+        }
+        async function resolveComplaint(complaintId) {
+            if (!confirm('Отметить жалобу как решённую?')) return;
+            try { await window.motoAdminResolveComplaint(complaintId); alert('Жалоба закрыта.'); await refreshData(); }
+            catch (error) { alert('Не удалось закрыть жалобу: ' + (error.message || error)); }
         }
 
-        function deleteLot(lotId) {
-            if (!confirm('⚠️ ВНИМАНИЕ! Вы уверены, что хотите УДАЛИТЬ этот лот? Это действие нельзя отменить.')) return;
-            const motorcycles = ui.dataStore.getMotorcycles();
-            const lotToDelete = motorcycles.find(m => Number(m.id) === Number(lotId));
-            if (!lotToDelete) {
-                alert('❌ Лот не найден');
-                return;
-            }
-            const deleted = ui.dataStore.deleteMotorcycle(lotId);
-            if (deleted) {
-                alert(`✅ Лот «${lotToDelete.title}» успешно удалён!`);
-                refreshData();
-            } else {
-                alert('Не удалось удалить лот. Попробуйте ещё раз.');
-            }
-        }
-        
-        function blockUser(userId) {
-            if (confirm('Заблокировать этого пользователя?')) {
-                let users = ui.dataStore.getUsers();
-                const userIndex = users.findIndex(u => u.id === userId);
-                if (userIndex !== -1 && users[userIndex].role !== 'admin') {
-                    users[userIndex].isBlocked = true;
-                    localStorage.setItem('users', JSON.stringify(users));
-                    alert('✅ Пользователь заблокирован');
-                    refreshData();
-                }
-            }
-        }
-        
-        function unblockUser(userId) {
-            let users = ui.dataStore.getUsers();
-            const userIndex = users.findIndex(u => u.id === userId);
-            if (userIndex !== -1) {
-                users[userIndex].isBlocked = false;
-                localStorage.setItem('users', JSON.stringify(users));
-                alert('✅ Пользователь разблокирован');
-                refreshData();
-            }
-        }
-        
-        function resolveComplaint(complaintId) {
-            if (confirm('Отметить жалобу как решенную?')) {
-                let complaints = JSON.parse(localStorage.getItem('complaints')) || [];
-                complaints = complaints.filter(c => c.id !== complaintId);
-                localStorage.setItem('complaints', JSON.stringify(complaints));
-                alert('✅ Жалоба закрыта');
-                refreshData();
-            }
-        }
-        
         function viewLot(lotId) {
             window.open(`lot.html?id=${lotId}`, '_blank');
         }
         
-        function refreshData() {
-            loadAdminData();
+        async function refreshData() {
+            await loadAdminData();
         }
         
         function exportData() {
-            const data = {
-                motorcycles: ui.dataStore.getMotorcycles(),
-                users: ui.dataStore.getUsers(),
-                complaints: JSON.parse(localStorage.getItem('complaints')) || [],
-                exportDate: new Date().toISOString()
-            };
+            const cache = window.motoAdminCache || {lots: [], users: [], complaints: [], sales: []};
+            const data = { motorcycles: cache.lots, users: cache.users, complaints: cache.complaints, sales: cache.sales, exportDate: new Date().toISOString() };
             const jsonStr = JSON.stringify(data, null, 2);
             const blob = new Blob([jsonStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -708,6 +682,7 @@
             alert('✅ Экспорт данных выполнен');
         }
     </script>
+    <script src="chat-config.js"></script>
     <script src="chatbot.js"></script>
 </body>
 </html>

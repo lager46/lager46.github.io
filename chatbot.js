@@ -3,7 +3,7 @@ class MotoChatBot {
         this.config = {
             // Настройки ИИ (опционально)
             aiProvider: options.aiProvider || 'backend', // 'backend' | 'local' | 'openai' | 'gemini'
-            apiEndpoint: options.apiEndpoint || '/api/chat',
+            apiEndpoint: options.apiEndpoint || window.MOTO_CHAT_API_URL || '/api/chat',
             apiKey: options.apiKey || '',
             model: options.model || 'gpt-3.5-turbo',
             

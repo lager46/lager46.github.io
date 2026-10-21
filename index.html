@@ -774,6 +774,7 @@
     <script src="supabase-client.js"></script>
     <script src="motoauction-supabase.js"></script>
     <script src="script.js"></script>
+    <script src="chat-config.js"></script>
     <script src="chatbot.js"></script>
     <script>
         
@@ -857,31 +858,27 @@
             }).join('');
         }
         
-        function loadStats() {
-    const motorcycles = ui.dataStore.getMotorcycles();
-    const users = ui.dataStore.getUsers();
-    
-    const totalLots = motorcycles.length;
-    
-    const totalUsers = users.length;
-    
-    const totalSales = motorcycles
-        .filter(m => m.status === 'sold')
-        .reduce((sum, m) => sum + m.currentPrice, 0);
-    
-    const totalLotsEl = document.getElementById('total-lots');
-    const happyClientsEl = document.getElementById('happy-clients');
-    const savedMoneyEl = document.getElementById('saved-money');
-    
-    if (totalLotsEl) totalLotsEl.textContent = totalLots;
-    if (happyClientsEl) happyClientsEl.textContent = totalUsers;
-    if (savedMoneyEl) savedMoneyEl.textContent = totalSales.toLocaleString() + ' ₽';
-}
+        async function loadStats() {
+            try {
+                const sb = await window.motoSupabaseReady();
+                const { data, error } = await sb.from('public_site_stats').select('*').single();
+                if (error) throw error;
+                const totalLotsEl = document.getElementById('total-lots');
+                const happyClientsEl = document.getElementById('happy-clients');
+                const savedMoneyEl = document.getElementById('saved-money');
+                if (totalLotsEl) totalLotsEl.textContent = Number(data.total_lots || 0).toLocaleString();
+                if (happyClientsEl) happyClientsEl.textContent = Number(data.registered_users || 0).toLocaleString();
+                if (savedMoneyEl) savedMoneyEl.textContent = Number(data.total_sales_volume || 0).toLocaleString() + ' ₽';
+            } catch (error) {
+                console.error('Не удалось загрузить статистику Supabase:', error);
+            }
+        }
         
         document.addEventListener('DOMContentLoaded', async function() {
             ui.initTheme();
             ui.updateAuthButtons();
             try {
+                await window.motoCloseExpiredAuctions();
                 await window.motoFetchMotorcycles();
             } catch (error) {
                 console.error('Не удалось загрузить каталог из Supabase:', error);

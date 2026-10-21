@@ -13,6 +13,15 @@
     const sb = await window.motoSupabaseReady();
     const { data, error } = await sb.auth.getUser();
     if (error) throw error;
+    if (data.user) {
+      const { data: profile, error: profileError } = await sb.from('profiles').select('is_blocked').eq('id', data.user.id).maybeSingle();
+      if (profileError) throw profileError;
+      if (profile && profile.is_blocked) {
+        await sb.auth.signOut();
+        localStorage.removeItem('currentUser');
+        throw new Error('Учётная запись заблокирована администратором.');
+      }
+    }
     return data.user;
   };
   window.motoRegister = async function ({email, password, username, phone}) {
@@ -28,6 +37,12 @@
     const sb = await window.motoSupabaseReady();
     const { data, error } = await sb.auth.signInWithPassword({email, password});
     if (error) throw error;
+    const { data: profile, error: profileError } = await sb.from('profiles').select('is_blocked').eq('id', data.user.id).maybeSingle();
+    if (profileError) throw profileError;
+    if (profile && profile.is_blocked) {
+      await sb.auth.signOut();
+      throw new Error('Учётная запись заблокирована администратором.');
+    }
     return data;
   };
   window.motoLogout = async function () {
@@ -100,6 +115,59 @@
     const { data, error } = await sb.from('motorcycles').select('*').eq('id', Number(id)).maybeSingle();
     if (error) throw error;
     return window.motoMapMotorcycle(data);
+  };
+
+
+  window.motoIsAdmin = async function () {
+    const sb = await window.motoSupabaseReady();
+    const { data, error } = await sb.rpc('is_moto_admin');
+    if (error) throw error;
+    return data === true;
+  };
+  window.motoSubmitComplaint = async function (motorcycleId, reason, details) {
+    const sb = await window.motoSupabaseReady();
+    const { data: authData, error: authError } = await sb.auth.getUser();
+    if (authError) throw authError;
+    if (!authData.user) throw new Error('Для отправки жалобы войдите в аккаунт.');
+    const { data, error } = await sb.from('complaints').insert({
+      motorcycle_id: Number(motorcycleId), user_id: authData.user.id,
+      reason: String(reason || '').trim(), details: String(details || '').trim(), status: 'open'
+    }).select().single();
+    if (error) throw error;
+    return data;
+  };
+  window.motoAdminSetLotStatus = async function (id, status, reason = null) {
+    const sb = await window.motoSupabaseReady();
+    const { error } = await sb.rpc('admin_set_lot_status', { p_lot_id: Number(id), p_status: status, p_reason: reason });
+    if (error) throw error;
+  };
+  window.motoAdminDeleteLot = async function (id) {
+    const sb = await window.motoSupabaseReady();
+    const { error } = await sb.rpc('admin_delete_lot', { p_lot_id: Number(id) });
+    if (error) throw error;
+  };
+  window.motoAdminResolveComplaint = async function (id) {
+    const sb = await window.motoSupabaseReady();
+    const { error } = await sb.rpc('admin_resolve_complaint', { p_complaint_id: Number(id) });
+    if (error) throw error;
+  };
+  window.motoAdminSetUserBlocked = async function (id, blocked) {
+    const sb = await window.motoSupabaseReady();
+    const { error } = await sb.rpc('admin_set_user_blocked', { p_user_id: id, p_blocked: Boolean(blocked) });
+    if (error) throw error;
+  };
+  window.motoFinalizeExpiredAuction = async function (id) {
+    const sb = await window.motoSupabaseReady();
+    const { error } = await sb.rpc('finalize_expired_auction', { p_lot_id: Number(id) });
+    if (error) throw error;
+  };
+  window.motoCloseExpiredAuctions = async function () {
+    const sb = await window.motoSupabaseReady();
+    const { data, error } = await sb.from('motorcycles').select('id').eq('status','active').not('end_date','is',null).lte('end_date',new Date().toISOString());
+    if (error) throw error;
+    const results = await Promise.allSettled((data || []).map(row => window.motoFinalizeExpiredAuction(row.id)));
+    const failed = results.find(r => r.status === 'rejected');
+    if (failed) console.warn('Не все истёкшие аукционы завершены:', failed.reason);
   };
 
   window.motoPlaceBid = async function (motorcycleId, amount) {
