@@ -153,6 +153,9 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="motoauction-supabase.js"></script>
     <script src="script.js"></script>
     <script>
         let uploadedImages = [];
@@ -325,60 +328,27 @@
             imagesDataInput.value = JSON.stringify(imagesArray);
         }
         
-        function createLot(event) {
+        async function createLot(event) {
             event.preventDefault();
-            
-            const title = document.getElementById('title').value;
-            const brand = document.getElementById('brand').value;
-            const model = document.getElementById('model').value;
-            const year = parseInt(document.getElementById('year').value);
-            const startingPrice = parseInt(document.getElementById('price').value);
-            const description = document.getElementById('description').value;
-            const duration = parseInt(document.getElementById('duration').value, 10);
-            const country = document.getElementById('country').value;
-            
-            const imagesData = document.getElementById('images-data').value;
+            const title = document.getElementById('title').value.trim();
+            const brand = document.getElementById('brand').value.trim();
+            const model = document.getElementById('model').value.trim();
+            const year = Number(document.getElementById('year').value);
+            const startingPrice = Number(document.getElementById('price').value);
+            const description = document.getElementById('description').value.trim();
+            const duration = Number(document.getElementById('duration').value || 7);
             let images = [];
+            try { images = JSON.parse(document.getElementById('images-data').value || '[]'); }
+            catch (_) { alert('Не удалось прочитать фотографии. Загрузите их заново.'); return; }
+            if (!images.length) { alert('Пожалуйста, добавьте хотя бы одну фотографию мотоцикла'); return; }
+            const endDate = new Date(Date.now() + duration * 86400000).toISOString();
             try {
-                images = imagesData ? JSON.parse(imagesData) : [];
-            } catch (error) {
-                alert('Не удалось прочитать фотографии. Удалите их и загрузите заново.');
-                return;
-            }
-            
-            if (images.length === 0) {
-                alert('Пожалуйста, добавьте хотя бы одну фотографию мотоцикла');
-                return;
-            }
-            
-            const mainImage = images[0];
-            const allImages = images;
-            
-            const endDate = new Date();
-            endDate.setDate(endDate.getDate() + duration);
-            
-            const motorcycleData = {
-                title,
-                brand,
-                model,
-                country,
-                year,
-                startingPrice,
-                description,
-                image: mainImage,
-                images: allImages,
-                endDate: endDate.toISOString()
-            };
-            
-            const result = ui.auctionSystem.createAuction(motorcycleData);
-            
-            if (result.success) {
-                alert('✅ Лот сохранён и отправлен на модерацию. Он появится в каталоге после одобрения администратора.');
+                await window.motoCreateLot({title, brand, model, year, startingPrice, description, images, image:images[0], endDate});
+                alert('Лот сохранён в Supabase и отправлен на модерацию.');
                 window.location.href = 'dashboard.html#my-lots';
-            } else {
-                alert('❌ Ошибка: ' + result.message);
-            }
+            } catch (error) { alert('Не удалось создать лот: ' + (error.message || error)); }
         }
+
     </script>
     
     <style>

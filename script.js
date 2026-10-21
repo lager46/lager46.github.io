@@ -246,6 +246,10 @@ class AuthSystem {
     }
     
     logout() {
+        if (typeof window.motoLogout === 'function') {
+            window.motoLogout().catch(error => alert('Не удалось выйти: ' + (error.message || error)));
+            return;
+        }
         localStorage.removeItem('currentUser');
         this.currentUser = null;
         window.location.href = 'index.html';
@@ -436,22 +440,17 @@ class UI {
         }
     }
     
-    placeBid(motorcycleId) {
+    async placeBid(motorcycleId) {
         const bidAmountInput = document.getElementById('bidAmount');
-        const amount = parseInt(bidAmountInput.value);
-        if (!amount || amount <= 0) {
-            alert('Введите корректную сумму');
-            return;
-        }
-        const result = this.auctionSystem.placeBid(motorcycleId, amount);
-        if (result.success) {
-            alert('✅ Ставка успешно размещена!');
+        const amount = Number(bidAmountInput?.value);
+        if (!amount || amount <= 0) { alert('Введите корректную сумму'); return; }
+        try {
+            await window.motoPlaceBid(motorcycleId, amount);
+            alert('Ставка успешно размещена в базе данных.');
             document.querySelector('.modal')?.remove();
             if (typeof loadAuctions === 'function') loadAuctions();
             if (typeof loadLotDetails === 'function') loadLotDetails();
-        } else {
-            alert('❌ Ошибка: ' + result.message);
-        }
+        } catch (error) { alert('Ставка не принята: ' + (error.message || error)); }
     }
     
     submitComplaint(motorcycleId, reason, details) {
@@ -484,59 +483,53 @@ class UI {
 
 const ui = new UI();
 
-function registerUser(event) {
+async function registerUser(event) {
     event.preventDefault();
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const username = document.getElementById('username').value;
-    const phone = document.getElementById('phone').value;
-    const result = ui.auth.register(email, password, username, phone);
-    if (result.success) {
-        alert('✅ Регистрация успешна! Теперь вы можете войти.');
+    const username = document.getElementById('username').value.trim();
+    const phone = document.getElementById('phone')?.value.trim() || '';
+    const confirm = document.getElementById('confirmPassword')?.value;
+    if (confirm !== undefined && password !== confirm) { alert('Пароли не совпадают.'); return; }
+    try {
+        await window.motoRegister({email, password, username, phone});
+        alert('Регистрация выполнена. Если включено подтверждение email, проверьте почту, затем войдите.');
         window.location.href = 'login.html';
-    } else {
-        alert('❌ Ошибка: ' + result.message);
-    }
+    } catch (error) { alert('Ошибка регистрации: ' + (error.message || error)); }
 }
 
-function loginUser(event) {
+async function loginUser(event) {
     event.preventDefault();
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const result = ui.auth.login(email, password);
-    if (result.success) {
-        alert('✅ Вход выполнен успешно!');
+    try {
+        const result = await window.motoLogin(email, password);
+        const user = result.user || result.session?.user;
+        if (user) localStorage.setItem('currentUser', JSON.stringify({id:user.id, email:user.email, username:user.user_metadata?.username || user.email, role:'user'}));
+        alert('Вход выполнен успешно!');
         window.location.href = 'index.html';
-    } else {
-        alert('❌ Ошибка: ' + result.message);
-    }
+    } catch (error) { alert('Ошибка входа: ' + (error.message || error)); }
 }
 
-function createLot(event) {
+async function createLot(event) {
     event.preventDefault();
-    const title = document.getElementById('title').value;
-    const brand = document.getElementById('brand').value;
-    const model = document.getElementById('model').value;
-    const year = parseInt(document.getElementById('year').value);
-    const startingPrice = parseInt(document.getElementById('price').value);
-    const description = document.getElementById('description').value;
-    const image = document.getElementById('image')?.value || 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
-    const duration = parseInt(document.getElementById('duration')?.value || 7);
-    
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() + duration);
-    
-    const imagesData = document.getElementById('images-data')?.value;
-    const images = imagesData ? JSON.parse(imagesData) : [image];
-    
-    const motorcycleData = { title, brand, model, year, startingPrice, description, image: images[0], images, endDate: endDate.toISOString() };
-    const result = ui.auctionSystem.createAuction(motorcycleData);
-    if (result.success) {
-        alert('✅ Лот создан! Ожидайте подтверждения администратора.');
-        window.location.href = 'dashboard.html';
-    } else {
-        alert('❌ Ошибка: ' + result.message);
-    }
+    const title = document.getElementById('title').value.trim();
+    const brand = document.getElementById('brand').value.trim();
+    const model = document.getElementById('model').value.trim();
+    const year = Number(document.getElementById('year').value);
+    const startingPrice = Number(document.getElementById('price').value);
+    const description = document.getElementById('description').value.trim();
+    const duration = Number(document.getElementById('duration')?.value || 7);
+    let images = [];
+    try { images = JSON.parse(document.getElementById('images-data')?.value || '[]'); }
+    catch (_) { alert('Не удалось прочитать фотографии. Загрузите их заново.'); return; }
+    if (!title || !startingPrice || startingPrice < 0 || !images.length) { alert('Укажите название, цену и добавьте фотографию.'); return; }
+    const endDate = new Date(Date.now() + duration * 86400000).toISOString();
+    try {
+        await window.motoCreateLot({title, brand, model, year, startingPrice, description, images, image:images[0], endDate});
+        alert('Лот сохранён в Supabase и отправлен на модерацию.');
+        window.location.href = 'dashboard.html#my-lots';
+    } catch (error) { alert('Не удалось создать лот: ' + (error.message || error)); }
 }
 
 (function() {
