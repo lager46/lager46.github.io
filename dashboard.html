@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Личный кабинет - MotoAuction</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chatbot.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Дополнительные стили для кнопок дашборда */
+
         .dashboard-menu {
             list-style: none;
             padding: 0;
@@ -420,6 +421,7 @@
                                     <option value="active">Активные</option>
                                     <option value="pending">На модерации</option>
                                     <option value="sold">Проданные</option>
+                                    <option value="rejected">Отклонённые</option>
                                 </select>
                             </div>
                         </div>
@@ -521,7 +523,7 @@
             ui.initTheme();
             ui.updateAuthButtons();
             loadDashboardData();
-            showTab('profile');
+            showTab(window.location.hash === '#my-lots' ? 'my-lots' : 'profile');
             
             initDashboardThemeToggle();
         });
@@ -605,18 +607,21 @@
         function loadUserLots() {
             const motorcycles = ui.dataStore.getMotorcycles();
             const user = ui.auth.currentUser;
-            const myLots = motorcycles.filter(m => m.sellerId === user.id);
+            const filter = document.getElementById('lot-filter')?.value || 'all';
+            const allMyLots = motorcycles.filter(m => Number(m.sellerId) === Number(user.id));
+            const myLots = filter === 'all' ? allMyLots : allMyLots.filter(m => m.status === filter);
             
             const container = document.getElementById('my-lots-container');
             if (!container) return;
             
             if (myLots.length === 0) {
+                const hasLotsBeforeFilter = allMyLots.length > 0;
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-motorcycle fa-3x gold" style="margin-bottom: 20px;"></i>
-                        <h3>У вас пока нет лотов</h3>
-                        <p>Создайте свой первый лот, чтобы выставить мотоцикл на аукцион</p>
-                        <a href="create-lot.html" class="btn btn-gold">Создать лот</a>
+                        <h3>${hasLotsBeforeFilter ? 'Нет лотов с выбранным статусом' : 'У вас пока нет лотов'}</h3>
+                        <p>${hasLotsBeforeFilter ? 'Выберите другой статус, чтобы увидеть остальные лоты.' : 'Создайте свой первый лот, чтобы выставить мотоцикл на аукцион.'}</p>
+                        ${hasLotsBeforeFilter ? '' : '<a href="create-lot.html" class="btn btn-gold">Создать лот</a>'}
                     </div>
                 `;
                 return;
@@ -641,11 +646,11 @@
                                     <span class="status-badge ${
                                         lot.status === 'active' ? 'status-active' : 
                                         lot.status === 'pending' ? 'status-pending' : 
-                                        'status-sold'
+                                        lot.status === 'rejected' ? 'status-rejected' : 'status-sold'
                                     }">
                                         ${lot.status === 'active' ? 'Активен' : 
                                           lot.status === 'pending' ? 'На модерации' : 
-                                          'Продан'}
+                                          lot.status === 'rejected' ? 'Отклонён' : 'Продан'}
                                     </span>
                                  </td>
                                 <td class="gold">${lot.currentPrice.toLocaleString()} ₽</td>
@@ -818,8 +823,7 @@
         }
         
         function filterMyLots() {
-            const filter = document.getElementById('lot-filter').value;
-            alert('Фильтрация будет доступна в следующей версии');
+            loadUserLots();
         }
     </script>
     
@@ -986,5 +990,6 @@
             }
         }
     </style>
+    <script src="chatbot.js"></script>
 </body>
 </html>

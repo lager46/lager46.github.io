@@ -129,19 +129,33 @@ class DataStore {
     }
     
     getMotorcycles() {
-        return JSON.parse(localStorage.getItem('motorcycles')) || [];
+        try {
+            const stored = JSON.parse(localStorage.getItem('motorcycles') || '[]');
+            return Array.isArray(stored) ? stored : [];
+        } catch (error) {
+            console.error('Не удалось прочитать список лотов:', error);
+            return [];
+        }
     }
     
     saveMotorcycle(motorcycle) {
         const motorcycles = this.getMotorcycles();
-        motorcycle.id = motorcycles.length > 0 ? Math.max(...motorcycles.map(m => m.id)) + 1 : 1;
+        const numericIds = motorcycles.map(m => Number(m.id)).filter(Number.isFinite);
+        motorcycle.id = numericIds.length ? Math.max(...numericIds) + 1 : 1;
         motorcycle.createdAt = new Date().toISOString();
         motorcycle.status = motorcycle.status || 'pending';
-        motorcycle.bids = motorcycle.bids || [];
-        motorcycle.images = motorcycle.images || [motorcycle.image];
-        motorcycles.push(motorcycle);
-        localStorage.setItem('motorcycles', JSON.stringify(motorcycles));
-        return motorcycle;
+        motorcycle.bids = Array.isArray(motorcycle.bids) ? motorcycle.bids : [];
+        motorcycle.images = Array.isArray(motorcycle.images) && motorcycle.images.length
+            ? motorcycle.images
+            : (motorcycle.image ? [motorcycle.image] : []);
+        try {
+            motorcycles.push(motorcycle);
+            localStorage.setItem('motorcycles', JSON.stringify(motorcycles));
+            return motorcycle;
+        } catch (error) {
+            console.error('Не удалось сохранить лот:', error);
+            return null;
+        }
     }
     
     updateMotorcycle(id, updates) {
@@ -157,9 +171,15 @@ class DataStore {
     
     deleteMotorcycle(id) {
         const motorcycles = this.getMotorcycles();
-        const filtered = motorcycles.filter(m => m.id !== id);
-        localStorage.setItem('motorcycles', JSON.stringify(filtered));
-        return true;
+        const filtered = motorcycles.filter(m => Number(m.id) !== Number(id));
+        if (filtered.length === motorcycles.length) return false;
+        try {
+            localStorage.setItem('motorcycles', JSON.stringify(filtered));
+            return true;
+        } catch (error) {
+            console.error('Не удалось удалить лот:', error);
+            return false;
+        }
     }
     
     addBid(motorcycleId, userId, amount, username) {
@@ -268,6 +288,9 @@ class AuctionSystem {
             motorcycleData.images = [motorcycleData.image];
         }
         const motorcycle = this.dataStore.saveMotorcycle(motorcycleData);
+        if (!motorcycle) {
+            return { success: false, message: 'Не удалось сохранить лот. Освободите место в хранилище браузера или уменьшите количество/размер фотографий.' };
+        }
         return { success: true, message: 'Лот создан и ожидает подтверждения', motorcycle };
     }
     

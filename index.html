@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MotoAuction – Мотоциклы с аукционов Японии под заказ</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chatbot.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .hero {
@@ -770,6 +771,7 @@
     </footer>
 
     <script src="script.js"></script>
+    <script src="chatbot.js"></script>
     <script>
         
         let currentCountry = 'all';
@@ -779,7 +781,9 @@
             const motorcycles = ui.dataStore.getMotorcycles();
             const container = document.getElementById('auctions-grid');
             
-            const activeAuctions = motorcycles.filter(m => m.status === 'active');
+            const activeAuctions = motorcycles.filter(m =>
+                m.status === 'active' && (!m.endDate || new Date(m.endDate).getTime() > Date.now())
+            );
             
             console.log('Всего лотов в системе:', motorcycles.length);
             console.log('Активных лотов:', activeAuctions.length);
@@ -796,10 +800,16 @@
                 return;
             }
             
+            const countryByBrand = {
+                'Yamaha': 'japan', 'Honda': 'japan', 'Suzuki': 'japan', 'Kawasaki': 'japan',
+                'Harley-Davidson': 'other', 'BMW': 'other', 'Ducati': 'other',
+                'Triumph': 'other', 'KTM': 'other', 'Aprilia': 'other'
+            };
             let filtered = activeAuctions;
             if (currentCountry !== 'all') {
+                filtered = filtered.filter(lot => (lot.country || countryByBrand[lot.brand] || 'other') === currentCountry);
             }
-            filtered = filtered.filter(lot => lot.currentPrice <= currentMaxPrice);
+            filtered = filtered.filter(lot => Number(lot.currentPrice || 0) <= currentMaxPrice);
             
             if (filtered.length === 0) {
                 container.innerHTML = `<div class="empty-state"><i class="fas fa-motorcycle fa-3x gold"></i><h3>Ничего не найдено</h3><p>Попробуйте изменить параметры поиска</p></div>`;
@@ -807,9 +817,8 @@
             }
             
             container.innerHTML = filtered.map(auction => {
-                const endDate = new Date(auction.endDate);
-                const now = new Date();
-                const timeLeft = endDate - now;
+                const endDate = auction.endDate ? new Date(auction.endDate) : null;
+                const timeLeft = endDate ? Math.max(0, endDate.getTime() - Date.now()) : 0;
                 const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 
@@ -873,6 +882,14 @@
             loadAuctions();
             loadStats();
             
+            // Обновляем каталог, если лот создан/одобрен в другой вкладке.
+            window.addEventListener('storage', function(event) {
+                if (event.key === 'motorcycles') {
+                    loadAuctions();
+                    loadStats();
+                }
+            });
+            
             document.querySelectorAll('.filter-tab').forEach(tab => {
                 tab.addEventListener('click', function() {
                     document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
@@ -910,6 +927,8 @@
             alert('✅ Спасибо! Наш менеджер свяжется с вами в ближайшее время.');
             event.target.reset();
         }
+
+
     </script>
 </body>
 </html>

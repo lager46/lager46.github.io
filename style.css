@@ -1124,3 +1124,10 @@ body {
         font-size: 20px;
     }
 }
+
+/* Статус лота, отклонённого модерацией */
+.status-rejected {
+    background: rgba(220, 70, 70, 0.12);
+    color: #ef7777;
+    border: 1px solid rgba(220, 70, 70, 0.28);
+}
